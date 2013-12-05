@@ -129,3 +129,8 @@ America suitable for plotting STEM 124x124 grid output"""
                              bbox=dict(facecolor='white', alpha=0.5))
         return(cs)
 
+    def add_scatter_plot(self, lons, lats):
+        """Plot dots at the locations specified by (lons, lats)."""
+        self.map.scatter(lons, lats, latlon=True)
+
+        return(None)
