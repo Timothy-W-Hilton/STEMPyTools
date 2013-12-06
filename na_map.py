@@ -95,13 +95,21 @@ America suitable for plotting STEM 124x124 grid output"""
                              lats,
                              data,
                              t_str=None,
-                             cmap=cm.get_cmap('Blues')):
+                             vmax=None,
+                             vmin=None,
+                             n_levs=20,
+                             cmap=cm.get_cmap('Blues'),
+                             cbar_t_str=None):
         """Draw filled contours of the specified OCS data over the
         map."""
 
-        n_levs = 20
-        contour_levs = np.linspace(data.min(),
-                                   data.max(),
+        if vmin is None:
+            vmin = data.min()
+        if vmax is None:
+            vmax = data.max()
+
+        contour_levs = np.linspace(vmin,
+                                   vmax,
                                    n_levs,
                                    endpoint=True)
 
@@ -116,7 +124,7 @@ America suitable for plotting STEM 124x124 grid output"""
         plt.colorbar(mappable=cs,
                      cax=self.ax_cmap,
                      format='%0.2e')
-        self.ax_cmap.set_title( 'mcls cm$^{-3}$' )
+        self.ax_cmap.set_title( cbar_t_str )
 
         if t_str is not None:
             # place a time label at (140, 20N) (out in the Pacific
