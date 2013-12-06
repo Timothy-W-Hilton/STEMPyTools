@@ -7,21 +7,23 @@ from netCDF4 import Dataset
 
 import na_map
 
-def parse_STEM_AQOUT(aq_fname=None, t0=None, t1=None):
-    """ Parse a OCS from a STEM AQOUT file.  Assumes that the OCS
-    variable in the netcdf file is called CO2_TRACER1.  Returns OCS
-    and timestamps (as datenum.datenum objects)."""
-    aq_out = Dataset(aq_fname, 'r', format='NETCDF4')
+def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
+    """ Parse a STEM variable from a STEM I/O API netcdf file.
+    varname must be a variable in the netcdf file. The file must also
+    contain a variable TFLAG containing timestamps in the format
+    <YYYYDDD,HHMMSS>.  Returns the values in varname as well as the
+    timestamps (as datenum.datenum objects)."""
+    nc = Dataset(nc_fname, 'r', format='NETCDF4')
     # read timestamps to datetime.datetime
-    t = np.squeeze(aq_out.variables['TFLAG'])
+    t = np.squeeze(nc.variables['TFLAG'])
     t_dt = np.array(([datetime.strptime(str(this[0]) +
                                         str(this[1]).zfill(6), '%Y%j%H%M%S')
                                         for this in t]))
     # find the requested timestamps
     t_idx = (t_dt >= t0) & (t_dt <= t1)
     # retrieve the requested [OCS] data
-    ocs = aq_out.variables['CO2_TRACER1'][t_idx, 0, :, : ]
-    return( ocs, t_dt[t_idx] )
+    data = nc.variables[varname][t_idx, 0, :, : ]
+    return( data, t_dt[t_idx] )
 
 def parse_STEM_coordinates(topo_fname):
     """Parse STEM grid latitude and longitude."""
