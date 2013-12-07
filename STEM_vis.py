@@ -37,6 +37,6 @@ def parse_STEM_coordinates(topo_fname):
 def initialize_STEM_map():
     """Initializes and returns a na_map object with "missing" color
     legend turned off."""
-    return(na_map.NAMapFigure(missing_axis=False))
+    return(na_map.NAMapFigure(missing_axis=None, cb_axis=True))
 
 

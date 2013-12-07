@@ -5,7 +5,9 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
+import pdb
 
 R_EARTH = 6371007.181000  #Earth radius in meters
 
@@ -17,30 +19,40 @@ America suitable for plotting STEM 124x124 grid output"""
                  t_str="STEM OCS",
                  col_missing=None,
                  use_color=True,
-                 cb_axis=True,
-                 missing_axis=True,
+                 map_axis=None,
+                 cb_axis=None,
+                 missing_axis=None,
                  fig_sz_x=None,
                  fig_sz_y=None):
 
-        if (fig_sz_x is None or fig_sz_y is None):
-            fig_sz = None
+        if map_axis is None:
+            # no axis provided for map, so create a figure and map axis
+            if (fig_sz_x is None or fig_sz_y is None):
+                fig_sz = None
+            else:
+                fig_sz = (fig_sz_x, fig_sz_y)
+            self.fig = plt.figure(figsize=fig_sz)
+            if t_str is not None:
+                self.fig.suptitle(t_str)
+
+            self.ax_map = self.fig.add_axes([0.10, 0.05, 0.7 , 0.9],
+                                            frame_on=True)
+
+            self.ax_cmap = cb_axis
+            if ((cb_axis is not None) and
+                (type(self.ax_cmap) is not mpl.axes.Axes)):
+                self.ax_cmap = self.fig.add_axes([0.85, 0.15, 0.05, 0.70],
+                                                 frame_on=True )
+            self.ax_miss = missing_axis
+            if ((missing_axis is not None) and
+                (type(self.ax_miss) is not mpl.axes.Axes)):
+                self.ax_miss = self.fig.add_axes([0.81, 0.1, 0.05, 0.05],
+                                                 frame_on=False)
         else:
-            fig_sz = (fig_sz_x, fig_sz_y)
-        self.fig = plt.figure(figsize=fig_sz)
-        if t_str is not None:
-            self.fig.suptitle(t_str)
-
-        self.ax_map = self.fig.add_axes([0.10, 0.05, 0.7 , 0.9],
-                                        frame_on=True)
-        if cb_axis:
-            self.ax_cmap = self.fig.add_axes([0.85, 0.15, 0.05, 0.70],
-                                             frame_on=True )
-            self.ax_cmap.set_title( '[OCS], ppb' )
-
-        if missing_axis:
-            self.ax_miss = self.fig.add_axes([0.81, 0.1, 0.05, 0.05],
-                                             frame_on=False)
-        self.cmesh_objs = []
+            # a map axis was provided -- draw the map there
+            self.ax_map = map_axis
+            self.ax_cmap = cb_axis
+            self.ax_miss = missing_axis
 
         mapwidth = 8.0e6  # not sure of units for width/height
         mapheight = 6.5e6
@@ -120,11 +132,12 @@ America suitable for plotting STEM 124x124 grid output"""
                                levels=contour_levs,
                                latlon=True,
                                cmap=cmap)
-        # plot a color legend
-        plt.colorbar(mappable=cs,
-                     cax=self.ax_cmap,
-                     format='%0.2e')
-        self.ax_cmap.set_title( cbar_t_str )
+        if self.ax_cmap is not None:
+            # plot a color legend
+            plt.colorbar(mappable=cs,
+                         cax=self.ax_cmap,
+                         format='%0.2e')
+            self.ax_cmap.set_title( cbar_t_str )
 
         if t_str is not None:
             # place a time label at (140, 20N) (out in the Pacific
