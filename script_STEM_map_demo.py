@@ -44,8 +44,8 @@ if read_data:
     ocs_flx = ma.masked_array( ocs_flx, mask = mask )
 
 t_lab = None #initialize time label
-#for i in range( ocs.shape[0] ):
-for i in range( 39,42 ):
+for i in range( ocs.shape[0] ):
+#for i in range( 39,46 ):
     t0 = datetime.now()
     # m = STEM_vis.initialize_STEM_map()
     # cs = m.add_ocs_contour_plot(lon,
@@ -78,7 +78,8 @@ for i in range( 39,42 ):
     ax_conc = plt.subplot(1,2,1)
     ax_flx = plt.subplot(1,2,2)
 
-    m_conc = na_map.NAMapFigure(map_axis=ax_conc)
+    m_conc = na_map.NAMapFigure(map_axis=ax_conc,
+                                t_str='[OCS], mcls cm$^{-3}$')
     cs = m_conc.add_ocs_contour_plot(lon,
                                 lat,
                                 ocs[ i, :, : ],
@@ -90,15 +91,21 @@ for i in range( 39,42 ):
                  ax=ax_conc,
                  format='%0.2e')
 
-    m_flx = na_map.NAMapFigure(map_axis=ax_flx)
+    m_flx = na_map.NAMapFigure(map_axis=ax_flx,
+                               t_str='OCS flux, mol m$^{-2}$ s$^{-1}$')
     cs = m_flx.add_ocs_contour_plot(lon,
                                     lat,
                                     ocs_flx[ i, :, : ],
                                     vmin=ocs_flx.min(),
                                     vmax=ocs_flx.max(),
                                     t_str=t_ocs_flx[i],
-                                    cmap=cm.get_cmap('Blues_r'),
+                                    cmap=cm.get_cmap('Greens_r'),
                                     cbar_t_str='mol m$^{-2}$ s$^{-1}$')
     plt.colorbar(mappable=cs,
                  ax=ax_flx,
                  format='%0.2e')
+
+    fname = datetime.strftime( t[i], '/home/thilton/Plots/STEM_Maps_ConcFlux/%Y-%m-%dT%H%M_STEM_OCS.png' )
+    print 'saving ' + fname + '(' + str(datetime.now() - t0) + ')'
+    plt.savefig( fname )
+    plt.close( fig_combined )

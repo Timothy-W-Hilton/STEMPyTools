@@ -32,8 +32,6 @@ America suitable for plotting STEM 124x124 grid output"""
             else:
                 fig_sz = (fig_sz_x, fig_sz_y)
             self.fig = plt.figure(figsize=fig_sz)
-            if t_str is not None:
-                self.fig.suptitle(t_str)
 
             self.ax_map = self.fig.add_axes([0.10, 0.05, 0.7 , 0.9],
                                             frame_on=True)
@@ -53,6 +51,10 @@ America suitable for plotting STEM 124x124 grid output"""
             self.ax_map = map_axis
             self.ax_cmap = cb_axis
             self.ax_miss = missing_axis
+
+        if t_str is not None:
+            self.ax_map.set_title(t_str)
+
 
         mapwidth = 8.0e6  # not sure of units for width/height
         mapheight = 6.5e6
