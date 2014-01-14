@@ -113,7 +113,8 @@ America suitable for plotting STEM 124x124 grid output"""
                              vmin=None,
                              n_levs=20,
                              cmap=cm.get_cmap('Blues'),
-                             cbar_t_str=None):
+                             cbar_t_str=None,
+                             colorbar_args={}):
         """Draw filled contours of the specified OCS data over the
         map."""
 
