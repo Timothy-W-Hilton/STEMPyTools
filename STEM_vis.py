@@ -31,12 +31,11 @@ def parse_STEM_coordinates(topo_fname):
 
     lat = np.squeeze(topo.variables['LAT'])
     lon = np.squeeze(topo.variables['LON'])
+    topo = np.squeeze(topo.variables['TOPO'])
 
-    return(lon, lat)
+    return(lon, lat, topo)
 
 def initialize_STEM_map():
     """Initializes and returns a na_map object with "missing" color
     legend turned off."""
     return(na_map.NAMapFigure(missing_axis=False))
-
-

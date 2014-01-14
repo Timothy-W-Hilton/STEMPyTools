@@ -99,7 +99,8 @@ America suitable for plotting STEM 124x124 grid output"""
                              vmin=None,
                              n_levs=20,
                              cmap=cm.get_cmap('Blues'),
-                             cbar_t_str=None):
+                             cbar_t_str=None,
+                             colorbar_args={}):
         """Draw filled contours of the specified OCS data over the
         map."""
 
@@ -123,7 +124,7 @@ America suitable for plotting STEM 124x124 grid output"""
         # plot a color legend
         plt.colorbar(mappable=cs,
                      cax=self.ax_cmap,
-                     format='%0.2e')
+                     **colorbar_args)
         self.ax_cmap.set_title( cbar_t_str )
 
         if t_str is not None:
