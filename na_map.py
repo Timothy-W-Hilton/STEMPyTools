@@ -139,7 +139,7 @@ America suitable for plotting STEM 124x124 grid output"""
             # plot a color legend
             plt.colorbar(mappable=cs,
                          cax=self.ax_cmap,
-                         format='%0.2e')
+                         **colorbar_args)
             self.ax_cmap.set_title( cbar_t_str )
 
         if t_str is not None:
