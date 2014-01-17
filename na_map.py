@@ -13,7 +13,7 @@ R_EARTH = 6371007.181000  #Earth radius in meters
 
 class NAMapFigure(object):
     """ Class to provide a Matplotlib figure containing a map of North
-America suitable for plotting STEM 124x124 grid output"""
+    America suitable for plotting STEM 124x124 grid output"""
 
     def __init__(self,
                  t_str="STEM OCS",
