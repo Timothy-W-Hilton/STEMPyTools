@@ -1,17 +1,20 @@
-#!/usr/bin/python
+#!/Users/tim/Library/Enthought/Canopy_64bit/User/bin/python
 
 import numpy as np
 import os.path
 import matplotlib.pyplot as plt
-from optparse import OptionParser
+import argparse
 import brewer2mpl
+import pdb
 
 from STEM_parsers import parse_reportopt
 
-def plot_reportopt(df):
+def plot_reportopt(df,cost_yrng):
     epsilon = 1e-8
     Dark2 = brewer2mpl.get_map('Dark2', 'Qualitative', number=3)
-    cost_yrng = [0, df['cost'].max()]
+
+    if cost_yrng is None:
+        cost_yrng = [0, df['cost'].max()]
 
     idx_iteration = df['it'].values
     if np.diff(report_opt['it'].values).max() < epsilon:
@@ -55,15 +58,22 @@ def plot_reportopt(df):
 
 if __name__ == "__main__":
 
-    # parse path to Report.opt
-    parser = OptionParser(usage='plot_ReportOpt [options] file_name',
-    description='plot cost function for specified Report.opt file.')
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error('incorrect number of arguments')
+    parser = argparse.ArgumentParser(
+        description=("Plot the progresion of the cost " +
+                     "function during a STEM optimization"))
+    parser.add_argument('filename',
+                        nargs='?',
+                        type=str,
+                        default='./Report.opt',
+                        help='a STEM Report.opt file')
+    parser.add_argument('-y', '--yrange',
+                        nargs=2,
+                        type=int,
+                        dest='yrng',
+                        help='min and max vertical axis values')
+    args = parser.parse_args()
 
     # draw the plot
-    fname = args[0]
-    report_opt = parse_reportopt(fname)
-    fig = plot_reportopt(report_opt)
+    report_opt = parse_reportopt(args.filename)
+    fig = plot_reportopt(report_opt, args.yrng)
     plt.show()
