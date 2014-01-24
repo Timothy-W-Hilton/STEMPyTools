@@ -37,13 +37,20 @@ if __name__ == "__main__":
                         default=input_dir,
                         help=('the STEM input directory. Must ' +
                               'contain TOPO-124x124.nc'))
+    parser.add_argument('-f', '--filename',
+                        nargs='?',
+                        type=str,
+                        default='t_obs_pred.dat',
+                        dest='fname',
+                        help=('the t_obs_pred.dat file containing the data ' +
+                              'to be plotted'))
     args = parser.parse_args()
 
     #parse input.dat
     inputdat_fname = os.path.join( args.run_dir, 'input.dat')
     inputdat = parse_inputdat(inputdat_fname)
     #parse t_obs_pred.dat emissions factors
-    tobspred_fname = os.path.join( args.run_dir, 't_obs_pred.dat')
+    tobspred_fname = os.path.join( args.run_dir, args.fname)
     tobspred = parse_tobspred(tobspred_fname)['emi_fac']
 
     # translate t_obs_pred emi_fac values into 124 x 124 grid
