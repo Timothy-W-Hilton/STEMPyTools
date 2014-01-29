@@ -30,15 +30,16 @@ if __name__ == "__main__":
         emifac_list = [parse_tobspred(f) for f in fnames]
         emifac = [x['emi_fac']['emi_fac'].values for x in emifac_list]
         emifac = np.transpose(np.array(emifac))
+        emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
 
-        means = np.mean(emifac, axis=0)
+        means = np.ma.mean(emifac, axis=0)
 
         fig, ax1 = plt.subplots(figsize=(10,6))
-        bx = plt.boxplot(emifac)
+        bx = plt.boxplot(emifac.filled(np.nan))
         plt.scatter(np.arange(emifac.shape[1])+1, means,
                     marker='*',
                     label='mean value')
-        ax1.set_title('"large slab" test optimization -- "weak" priors')
+        ax1.set_title('"large slab" test optimization -- "weak" priors, 1.0 removed')
         ax1.set_xlabel('STEM optimization iteration')
         ax1.set_ylabel('emission scaling factor')
 
