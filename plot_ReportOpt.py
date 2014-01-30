@@ -9,7 +9,7 @@ import pdb
 
 from STEM_parsers import parse_reportopt
 
-def plot_reportopt(df,cost_yrng):
+def plot_reportopt(df,cost_yrng,title=None):
     epsilon = 1e-8
     Dark2 = brewer2mpl.get_map('Dark2', 'Qualitative', number=3)
 
@@ -31,7 +31,9 @@ def plot_reportopt(df,cost_yrng):
     ax.set_xlim([ -0.5, max(idx_iteration) + 0.5])
     ax.set_xlabel('iteration')
     ax.set_ylabel('cost function (mol OCS m$^{-3}$)$^2$')
-
+    if title:
+        ax.set_title(title)
+        
     plt.plot(idx_iteration,
              df['misfit'].values,
              'o--',
@@ -71,9 +73,14 @@ if __name__ == "__main__":
                         type=int,
                         dest='yrng',
                         help='min and max vertical axis values')
+    parser.add_argument('-T', '--title',
+                        nargs=1,
+                        type=str,
+                        dest='title',
+                        help='title to appear above the plot')
     args = parser.parse_args()
 
     # draw the plot
     report_opt = parse_reportopt(args.filename)
-    fig = plot_reportopt(report_opt, args.yrng)
+    fig = plot_reportopt(report_opt, args.yrng, args.title[0])
     plt.show()
