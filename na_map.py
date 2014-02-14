@@ -51,6 +51,7 @@ class NAMapFigure(object):
             self.ax_map = map_axis
             self.ax_cmap = cb_axis
             self.ax_miss = missing_axis
+            self.fig = self.ax_map.figure
 
         if t_str is not None:
             self.ax_map.set_title(t_str)
