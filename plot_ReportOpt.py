@@ -9,7 +9,7 @@ import pdb
 
 from STEM_parsers import parse_reportopt
 
-def plot_reportopt(df,cost_yrng,title=None):
+def plot_reportopt(df, cost_yrng=None, title=None, ax=None):
     epsilon = 1e-8
     Dark2 = brewer2mpl.get_map('Dark2', 'Qualitative', number=3)
 
@@ -17,44 +17,48 @@ def plot_reportopt(df,cost_yrng,title=None):
         cost_yrng = [0, df['cost'].max()]
 
     idx_iteration = df['it'].values
-    if np.diff(report_opt['it'].values).max() < epsilon:
+    if np.diff(df['it'].values).max() < epsilon:
         idx_iteration = df.index
 
     # plot cost function
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1)
-    plt.plot(idx_iteration,
-             df['cost'].values,
-             'kv-',
-             label='cost fct')
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(1,1,1)
+    else:
+        fig = ax.figure
+        
+    ax.plot(idx_iteration,
+            df['cost'].values,
+            'kv-',
+            label='cost fct')
     ax.set_ylim(cost_yrng)
     ax.set_xlim([ -0.5, max(idx_iteration) + 0.5])
     ax.set_xlabel('iteration')
     ax.set_ylabel('cost function (mol OCS m$^{-3}$)$^2$')
     if title:
         ax.set_title(title)
-        
-    plt.plot(idx_iteration,
+
+    ax.plot(idx_iteration,
              df['misfit'].values,
              'o--',
              color=Dark2.mpl_colors[0],
              label='misfit')
 
-    plt.plot(idx_iteration,
-             df['bckg'].values,
-             '^--',
-             color=Dark2.mpl_colors[1],
-             label='background')
+    ax.plot(idx_iteration,
+            df['bckg'].values,
+            '^--',
+            color=Dark2.mpl_colors[1],
+            label='background')
 
     #plot a vertical line for each "new x"
     idx_newx = idx_iteration[np.where(df['task'].values == 'NEW_X')[0]]
-    plt.vlines(x=idx_newx,
+    ax.vlines(x=idx_newx,
                ymin=cost_yrng[0],
                ymax=cost_yrng[1],
                linestyles='dotted',
                label='new x')
 
-    plt.legend(loc='best')
+    ax.legend(loc='best')
     return(fig)
 
 
