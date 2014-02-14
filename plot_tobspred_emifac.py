@@ -4,14 +4,23 @@ import os
 import os.path
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import pandas as pd
 import argparse
 
-from STEM_parsers import parse_inputdat, parse_tobspred
+from STEM_parsers import parse_inputdat, parse_tobspred, parse_STEM_coordinates
 import STEM_vis
 import na_map
 
-def draw_plot(run_dir, input_dir, fname, iter):
+def draw_plot(run_dir,
+              input_dir,
+              fname,
+              iter,
+              ax=None,
+              t_str=None,
+              cb_axis=True,
+              v_rng=(0.0, 10.0),
+              cmap=cm.get_cmap('Blues'),):
     #parse input.dat
     inputdat_fname = os.path.join( run_dir, 'input.dat')
     inputdat = parse_inputdat(inputdat_fname)
@@ -20,25 +29,28 @@ def draw_plot(run_dir, input_dir, fname, iter):
     tobspred = parse_tobspred(tobspred_fname)['emi_fac']
 
     # translate t_obs_pred emi_fac values into 124 x 124 grid
-    [lon,lat,topo] =STEM_vis.parse_STEM_coordinates(
+    [lon,lat,topo] = parse_STEM_coordinates(
         os.path.join(input_dir, 'TOPO-124x124.nc'))
     tobspred_gridded = STEM_vis.coords_to_grid(tobspred['x'].values,
                                                tobspred['y'].values,
                                                tobspred['emi_fac'].values)
 
     # map the emi_fac values
-    t_str =  "STEM emi_fac; large slab test, weak priors"
-    if iter is not None:
-        t_str = t_str + "; iteration {}".format(iter)
+    if t_str is 'default':
+        t_str =  "STEM emi_fac; large slab test, weak priors"
+        if iter is not None:
+            t_str = t_str + "; iteration {}".format(iter)
     m_emifac = na_map.NAMapFigure(t_str=t_str,
-                                  cb_axis=True)
+                                  cb_axis=cb_axis,
+                                  map_axis=ax)
     m_emifac.add_ocs_contour_plot(lon,
                                   lat,
                                   tobspred_gridded,
-                                  vmin=1.0,
-                                  vmax=2.0,
+                                  vmin=v_rng[0],
+                                  vmax=v_rng[1],
                                   cbar_t_str='emi_fac',
-                                  colorbar_args={'format': '%0.2f'})
+                                  colorbar_args={'format': '%0.2f'},
+                                  cmap=cmap)
 
     return(m_emifac)
 
