@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
 from glob import glob
+import pdb
 
 from STEM_parsers import parse_inputdat, parse_tobspred
 
@@ -20,11 +21,24 @@ def draw_boxplots(emifac, ax=None):
 
     means = np.ma.mean(emifac, axis=0)
     bx = ax.boxplot(emifac)
-    ax.scatter(np.arange(emifac.shape[1])+1, means,
-                marker='*',
-                label='mean value')
+    plt.setp(bx['boxes'], color='black')
+    plt.setp(bx['medians'], color='red')
+    plt.setp(bx['whiskers'], color='black')
+    plt.setp(bx['fliers'], color='black', marker='+')
+
+    h_means = ax.scatter(np.arange(emifac.shape[1])+1, means,
+                         marker='*',
+                         color='red',
+                         label='mean value')
     ax.set_xlabel('STEM optimization iteration')
     ax.set_ylabel('emission scaling factor')
+
+    ax.legend((bx['medians'][0], bx['boxes'][0], h_means),
+              ('median', '25 & 75 percentile', 'mean'),
+              ncol=3,
+              numpoints=1,
+              scatterpoints=1)
+
     return(fig, ax)
 
 if __name__ == "__main__":
