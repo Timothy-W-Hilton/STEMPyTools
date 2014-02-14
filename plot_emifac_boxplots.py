@@ -27,7 +27,7 @@ def draw_boxplots(emifac, ax=None):
     plt.setp(bx['fliers'], color='black', marker='+')
 
     h_means = ax.scatter(np.arange(emifac.shape[1])+1, means,
-                         marker='*',
+                         marker='x',
                          color='red',
                          label='mean value')
     ax.set_xlabel('STEM optimization iteration')
@@ -35,9 +35,11 @@ def draw_boxplots(emifac, ax=None):
 
     ax.legend((bx['medians'][0], bx['boxes'][0], h_means),
               ('median', '25 & 75 percentile', 'mean'),
-              ncol=3,
+              ncol=2,
               numpoints=1,
-              scatterpoints=1)
+              scatterpoints=1,
+              bbox_to_anchor=(0., 1.02, 1., .102),
+              loc='lower left')
 
     return(fig, ax)
 

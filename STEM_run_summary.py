@@ -10,6 +10,7 @@ import os.path
 import pdb
 import sys
 from datetime import datetime
+import argparse
 
 import STEM_parsers
 import STEM_vis
@@ -18,7 +19,7 @@ import plot_ReportOpt
 import plot_emifac_boxplots
 import plot_tobspred_emifac
 
-def initialize_plotting_objects(n_plots=8, figsize=(17,22)):
+def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
     """create a figure and axes instances to hold STEM run summary
     plots.  Returns a tuple containing the figure and a list of axes"""
 
@@ -32,7 +33,7 @@ def initialize_plotting_objects(n_plots=8, figsize=(17,22)):
     ax_list = {'text_panel':fig.add_subplot(gs0[0, :])}
 
     gs1 = gridspec.GridSpec(n_rows, n_cols)
-    gs1.update(left=0.05, right=0.50, wspace=0.01)
+    gs1.update(left=0.05, right=0.50, wspace=0.05, hspace=0.30)
     ax_list.update({'cost_func':fig.add_subplot(gs1[1, 0:9]),
                     'emi_fac_map_final':fig.add_subplot(gs1[2, 0:7]),
                     'emi_fac_map_final_cbar':fig.add_subplot(gs1[2, 8]),
@@ -40,7 +41,7 @@ def initialize_plotting_objects(n_plots=8, figsize=(17,22)):
                     'pseudo_map_cbar':fig.add_subplot(gs1[3, 8])})
     #define spacing for right-hand column of panels
     gs2 = gridspec.GridSpec(n_rows, n_cols)
-    gs2.update(left=0.55, right=0.95, wspace=0.01)
+    gs2.update(left=0.55, right=0.95, wspace=0.05, hspace=0.30)
     ax_list.update({'emi_fac_boxplots':fig.add_subplot(gs2[1, 0:9]),
                     'emi_fac_map_N':fig.add_subplot(gs2[2, 0:7]),
                     'emi_fac_map_N_cbar':fig.add_subplot(gs2[2, 8]),
@@ -49,16 +50,17 @@ def initialize_plotting_objects(n_plots=8, figsize=(17,22)):
 
     return((fig, ax_list))
 
-def summary_text_panel(ax, run_dir, input_dir):
+def summary_text_panel(ax, run_dir, input_dir, fontsize=8, note=''):
     ax.clear()
     txt = ('STEM run summary - produced ' +
-           datetime.strftime(datetime.now(), '%d %b %Y %H:%M:%S') + '\n' + 
+           datetime.strftime(datetime.now(), '%d %b %Y %H:%M:%S') + '\n' +
            'run directory: ' + run_dir + '\n'
-           'input directory: ' + input_dir + '\n')
+           'input directory: ' + input_dir + '\n' +
+           note + '\n')
     text_obj = ax.text(0.0,
                        1.0,
                        txt,
-                       fontsize=16,
+                       fontsize=fontsize,
                        horizontalalignment='left',
                        verticalalignment='top',
                        transform = ax.transAxes)
@@ -124,28 +126,62 @@ if __name__ == "__main__":
     TODO: make run, input directory arguments
     """
 
-    run_dir = os.path.join(os.getenv('HOME'),
-                           'Stem_emi2_onespecies_big_ocssib',
-                           'run.TWH_opt_test_large_slab_weak_prior_0.8')
-    input_dir = '/mnt/home10/skulkarni/StemData21Jul2013/input/'
+    default_input_dir = '/mnt/home10/skulkarni/StemData21Jul2013/input/'
+    default_outfile = os.path.join(os.getenv('HOME'), 'STEM_summary.pdf')
+
+    parser = argparse.ArgumentParser(
+        description=("create a one-page PDF with diagnostic plots for " +
+                     "a STEM optimization run vs. optimization iteration " +
+                     "for a STEM optimization run"))
+    parser.add_argument('-r', '--run_dir',
+                        nargs='?',
+                        type=str,
+                        default='',
+                        help=('the STEM run directory. Must ' +
+                              'contain t_obs_pred*.dat and input.dat'))
+    parser.add_argument('-i', '--input_dir',
+                        nargs='?',
+                        type=str,
+                        default=default_input_dir,
+                        help=('the STEM input directory. Must ' +
+                              'contain TOPO-124x124.nc'))
+    parser.add_argument('-o', '--outfile',
+                        nargs='?',
+                        type=str,
+                        default=default_outfile,
+                        help='filename for the PDF output file')
+    parser.add_argument('-n', '--note',
+                        nargs='?',
+                        type=str,
+                        default='',
+                        help=('optional user-specified text to appear' +
+                              'in the summary text panel.'))
+    args = parser.parse_args()
+
+    matplotlib.rcParams.update({'font.size': 8})
+    #plt.rcdefaults # restore defaults
+
 
     n_plots = 8
     [fig, ax_list] = initialize_plotting_objects(n_plots)
 
     print 'plotting summary text panel'
-    summary_text_panel(ax_list['text_panel'], run_dir, input_dir)
+    summary_text_panel(ax_list['text_panel'],
+                       args.run_dir,
+                       args.input_dir,
+                       note=args.note)
 
     print 'plotting cost function'
-    report_opt_df = STEM_parsers.parse_reportopt(os.path.join(run_dir,
+    report_opt_df = STEM_parsers.parse_reportopt(os.path.join(args.run_dir,
                                                               'Report.opt'))
     plot_ReportOpt.plot_reportopt(report_opt_df, ax=ax_list['cost_func'])
 
     print 'plotting emi_fac boxplots'
-    emi_fac = STEM_parsers.parse_all_emifac(run_dir, mask_ones=False)
+    emi_fac = STEM_parsers.parse_all_emifac(args.run_dir, mask_ones=False)
     plot_emifac_boxplots.draw_boxplots(emi_fac, ax=ax_list['emi_fac_boxplots'])
 
     sys.stdout.write('drawing emissions factors map: ')
-    file_list = STEM_parsers.get_all_tobspred_fnames(run_dir)
+    file_list = STEM_parsers.get_all_tobspred_fnames(args.run_dir)
     if file_list:
         sys.stdout.write(os.path.basename(file_list[-1]) + '\n')
         sys.stdout.flush()
@@ -153,8 +189,8 @@ if __name__ == "__main__":
         n_iter = len(file_list)
         midway_through = int(np.floor(n_iter / 2))
         emi_fac_map = plot_tobspred_emifac.draw_plot(
-            run_dir,
-            input_dir,
+            args.run_dir,
+            args.input_dir,
             file_list[-1],
             n_iter,
             t_str='final emissions factors',
@@ -166,8 +202,8 @@ if __name__ == "__main__":
                          '\n')
         sys.stdout.flush()
         emi_fac_map = plot_tobspred_emifac.draw_plot(
-            run_dir,
-            input_dir,
+            args.run_dir,
+            args.input_dir,
             file_list[midway_through],
             n_iter,
             t_str='emissions factors, iteration {}'.format(midway_through),
@@ -176,8 +212,8 @@ if __name__ == "__main__":
             cmap=cm.get_cmap('Oranges'))
 
     print 'drawing OCS pseuoddata map'
-    psuedodata_OCS_map = plot_inputdat_conc(input_dir,
-                                            run_dir,
+    psuedodata_OCS_map = plot_inputdat_conc(args.input_dir,
+                                            args.run_dir,
                                             ax_list['pseudo_map'],
                                             ax_list['pseudo_map_cbar'],
                                             t_str='pseudodata',
@@ -185,7 +221,7 @@ if __name__ == "__main__":
 
     print 'drawing OCS prior concentration'
     run_dir_fwd = '/home/thilton/Stem_emi2_onespecies_big_ocssib/run.TWH_fwd_dummy'
-    fwd_OCS_map = plot_tobspred_conc(input_dir,
+    fwd_OCS_map = plot_tobspred_conc(args.input_dir,
                                      't_obs_pred_1.0x.dat',
                                      run_dir_fwd,
                                      ax_list['fwd_map'],
@@ -193,5 +229,5 @@ if __name__ == "__main__":
                                      t_str='STEM forward run',
                                      cbar_t_str='OCS [ppbv]')
 
-    print 'saving the summary'
-    fig.savefig(os.path.join(os.getenv('HOME'), 'Plots', 'test_summary.pdf'))
+    print 'saving the summary to ' + args.outfile
+    fig.savefig(args.outfile)
