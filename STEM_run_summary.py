@@ -9,6 +9,7 @@ import os
 import os.path
 import pdb
 import sys
+from datetime import datetime
 
 import STEM_parsers
 import STEM_vis
@@ -22,27 +23,47 @@ def initialize_plotting_objects(n_plots=8, figsize=(17,22)):
     plots.  Returns a tuple containing the figure and a list of axes"""
 
     n_rows = np.int(np.ceil(n_plots/2))
+    n_cols = 10
 
     fig = plt.figure(figsize=figsize)
     #define spacing for left-hand column of panels
 
-    gs1 = gridspec.GridSpec(n_rows, 10)
+    gs0 = gridspec.GridSpec(n_rows, n_cols)
+    ax_list = {'text_panel':fig.add_subplot(gs0[0, :])}
+
+    gs1 = gridspec.GridSpec(n_rows, n_cols)
     gs1.update(left=0.05, right=0.50, wspace=0.01)
-    ax_list = {'cost_func':fig.add_subplot(gs1[0, 0:9]),
-               'emi_fac_map_final':fig.add_subplot(gs1[1, 0:7]),
-               'emi_fac_map_final_cbar':fig.add_subplot(gs1[1, 8]),
-               'pseudo_map':fig.add_subplot(gs1[2, 0:7]),
-               'pseudo_map_cbar':fig.add_subplot(gs1[2, 8])}
+    ax_list.update({'cost_func':fig.add_subplot(gs1[1, 0:9]),
+                    'emi_fac_map_final':fig.add_subplot(gs1[2, 0:7]),
+                    'emi_fac_map_final_cbar':fig.add_subplot(gs1[2, 8]),
+                    'pseudo_map':fig.add_subplot(gs1[3, 0:7]),
+                    'pseudo_map_cbar':fig.add_subplot(gs1[3, 8])})
     #define spacing for right-hand column of panels
-    gs2 = gridspec.GridSpec(n_rows, 10)
+    gs2 = gridspec.GridSpec(n_rows, n_cols)
     gs2.update(left=0.55, right=0.95, wspace=0.01)
-    ax_list.update({'emi_fac_boxplots':fig.add_subplot(gs2[0, 0:9]),
-                    'emi_fac_map_N':fig.add_subplot(gs2[1, 0:7]),
-                    'emi_fac_map_N_cbar':fig.add_subplot(gs2[1, 8]),
-                    'fwd_map':fig.add_subplot(gs2[2, 0:7]),
-                    'fwd_map_cbar':fig.add_subplot(gs2[2, 8])})
+    ax_list.update({'emi_fac_boxplots':fig.add_subplot(gs2[1, 0:9]),
+                    'emi_fac_map_N':fig.add_subplot(gs2[2, 0:7]),
+                    'emi_fac_map_N_cbar':fig.add_subplot(gs2[2, 8]),
+                    'fwd_map':fig.add_subplot(gs2[3, 0:7]),
+                    'fwd_map_cbar':fig.add_subplot(gs2[3, 8])})
 
     return((fig, ax_list))
+
+def summary_text_panel(ax, run_dir, input_dir):
+    ax.clear()
+    txt = ('STEM run summary - produced ' +
+           datetime.strftime(datetime.now(), '%d %b %Y %H:%M:%S') + '\n' + 
+           'run directory: ' + run_dir + '\n'
+           'input directory: ' + input_dir + '\n')
+    text_obj = ax.text(0.0,
+                       1.0,
+                       txt,
+                       fontsize=16,
+                       horizontalalignment='left',
+                       verticalalignment='top',
+                       transform = ax.transAxes)
+    ax.set_axis_off()
+    return(text_obj)
 
 def plot_inputdat_conc(input_dir,
                        run_dir,
@@ -111,6 +132,9 @@ if __name__ == "__main__":
     n_plots = 8
     [fig, ax_list] = initialize_plotting_objects(n_plots)
 
+    print 'plotting summary text panel'
+    summary_text_panel(ax_list['text_panel'], run_dir, input_dir)
+
     print 'plotting cost function'
     report_opt_df = STEM_parsers.parse_reportopt(os.path.join(run_dir,
                                                               'Report.opt'))
@@ -137,7 +161,7 @@ if __name__ == "__main__":
             ax=ax_list['emi_fac_map_final'],
             cb_axis=ax_list['emi_fac_map_final_cbar'],
             cmap=cm.get_cmap('Oranges'))
-        sys.stdout.write('drawing emissions factors map: ' + 
+        sys.stdout.write('drawing emissions factors map: ' +
                          os.path.basename(file_list[midway_through]) +
                          '\n')
         sys.stdout.flush()
