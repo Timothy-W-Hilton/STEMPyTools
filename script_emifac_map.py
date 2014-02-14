@@ -61,6 +61,7 @@ if __name__ == '__main__':
     pdf = PdfPages(args.outfilename)
     file_list = glob.glob(os.path.join(args.run_dir,
                                        't_obs_pred*.dat'))
+    file_list = sorted(file_list)
     for this_file in file_list:
         match_obj = re.search('[0-9]{3}', this_file)
         if match_obj:
