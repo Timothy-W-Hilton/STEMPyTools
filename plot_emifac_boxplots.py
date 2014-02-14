@@ -7,6 +7,26 @@ from glob import glob
 
 from STEM_parsers import parse_inputdat, parse_tobspred
 
+def draw_boxplots(emifac, ax=None):
+    """draws boxplots showing the median, mean, and spread of STEM
+    emissions factors vs.  STEM optimization iteration."""
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10,6))
+    else:
+        fig = ax.figure
+    if type(emifac) is np.ma:
+        emifac = emifac.filled(np.nan)
+
+    means = np.ma.mean(emifac, axis=0)
+    bx = ax.boxplot(emifac)
+    ax.scatter(np.arange(emifac.shape[1])+1, means,
+                marker='*',
+                label='mean value')
+    ax.set_xlabel('STEM optimization iteration')
+    ax.set_ylabel('emission scaling factor')
+    return(fig, ax)
+
 if __name__ == "__main__":
 
     run_dir = os.path.join('/home',
@@ -32,15 +52,11 @@ if __name__ == "__main__":
         emifac = np.transpose(np.array(emifac))
         emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
 
-        means = np.ma.mean(emifac, axis=0)
-
         fig, ax1 = plt.subplots(figsize=(10,6))
-        bx = plt.boxplot(emifac.filled(np.nan))
-        plt.scatter(np.arange(emifac.shape[1])+1, means,
-                    marker='*',
-                    label='mean value')
+
+        draw_boxplots(emifac, ax=ax1)
         ax1.set_title('"large slab" test optimization -- "weak" priors, 1.0 removed')
-        ax1.set_xlabel('STEM optimization iteration')
-        ax1.set_ylabel('emission scaling factor')
 
         plt.legend(loc='best')
+
+        plt.show()
