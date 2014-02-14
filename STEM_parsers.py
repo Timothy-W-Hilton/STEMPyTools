@@ -2,8 +2,13 @@
 
 from __future__ import division
 import os.path
+from glob import glob
 import re
+import numpy as np
+import numpy.ma as ma
 import pandas as pd
+from datetime import datetime
+from netCDF4 import Dataset
 
 #--------------------------------------------------
 # helper classes, functions
@@ -120,3 +125,54 @@ def parse_reportopt(fname, block_sz=11):
     df = pd.DataFrame(block_list)
     return(df)
 
+def get_all_tobspred_fnames(run_dir):
+    """returns list of full paths to all files in the specified
+    directory matching t_obs_pred*.dat"""
+    file_list = glob(os.path.join(run_dir,
+                                  't_obs_pred*.dat'))
+    file_list = sorted(file_list)
+    return(file_list)
+
+def parse_all_emifac(run_dir, mask_ones=True):
+    """parse all emi_fac values from all t_obs_pred_ABC.dat files
+    present within a specified directory into a numpy array, one
+    column per STEM iteration.  Provides an option (on by default) to
+    mask values emi_fac values equal to 1.0."""
+    emifac = None
+    fnames = get_all_tobspred_fnames(run_dir)
+    if fnames:
+        emifac_list = [parse_tobspred(f) for f in fnames]
+        emifac = [x['emi_fac']['emi_fac'].values for x in emifac_list]
+        emifac = np.transpose(np.array(emifac))
+        #mask emifac values == 1.0
+        if mask_ones:
+            emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
+    return(emifac)
+
+def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
+    """ Parse a STEM variable from a STEM I/O API netcdf file.
+    varname must be a variable in the netcdf file. The file must also
+    contain a variable TFLAG containing timestamps in the format
+    <YYYYDDD,HHMMSS>.  Returns the values in varname as well as the
+    timestamps (as datenum.datenum objects)."""
+    nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    # read timestamps to datetime.datetime
+    t = np.squeeze(nc.variables['TFLAG'])
+    t_dt = np.array(([datetime.strptime(str(this[0]) +
+                                        str(this[1]).zfill(6), '%Y%j%H%M%S')
+                                        for this in t]))
+    # find the requested timestamps
+    t_idx = (t_dt >= t0) & (t_dt <= t1)
+    # retrieve the requested [OCS] data
+    data = nc.variables[varname][t_idx, 0, :, : ]
+    return( data, t_dt[t_idx] )
+
+def parse_STEM_coordinates(topo_fname):
+    """Parse STEM grid latitude and longitude."""
+    topo = Dataset(topo_fname, 'r', format='NETCDF4')
+
+    lat = np.squeeze(topo.variables['LAT'])
+    lon = np.squeeze(topo.variables['LON'])
+    topo = np.squeeze(topo.variables['TOPO'])
+
+    return(lon, lat, topo)
