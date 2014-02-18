@@ -38,7 +38,7 @@ def draw_boxplots(emifac, ax=None):
               ncol=2,
               numpoints=1,
               scatterpoints=1,
-              bbox_to_anchor=(0., 1.02, 1., .102),
+              bbox_to_anchor=(0.0, 1.02, 1.0, .102),
               loc='lower left')
 
     return(fig, ax)

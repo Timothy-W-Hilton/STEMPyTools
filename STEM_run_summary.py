@@ -1,6 +1,6 @@
 import matplotlib
-matplotlib.use('Agg') #this seems to get around the "couldn't connect
-                       #to display "localhost:10.0" error -- TWH
+matplotlib.use('Agg')   # this seems to get around the 'couldn't connect to display "localhost:10.0" error' that crops up now and then -- TWH  
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
@@ -33,7 +33,7 @@ def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
     ax_list = {'text_panel':fig.add_subplot(gs0[0, :])}
 
     gs1 = gridspec.GridSpec(n_rows, n_cols)
-    gs1.update(left=0.05, right=0.50, wspace=0.05, hspace=0.30)
+    gs1.update(left=0.10, right=0.50, wspace=0.05, hspace=0.30)
     ax_list.update({'cost_func':fig.add_subplot(gs1[1, 0:9]),
                     'emi_fac_map_final':fig.add_subplot(gs1[2, 0:7]),
                     'emi_fac_map_final_cbar':fig.add_subplot(gs1[2, 8]),
@@ -196,6 +196,7 @@ if __name__ == "__main__":
             t_str='final emissions factors',
             ax=ax_list['emi_fac_map_final'],
             cb_axis=ax_list['emi_fac_map_final_cbar'],
+            v_rng=(0.0, 3.0),
             cmap=cm.get_cmap('Oranges'))
         sys.stdout.write('drawing emissions factors map: ' +
                          os.path.basename(file_list[midway_through]) +
@@ -209,6 +210,7 @@ if __name__ == "__main__":
             t_str='emissions factors, iteration {}'.format(midway_through),
             ax=ax_list['emi_fac_map_N'],
             cb_axis=ax_list['emi_fac_map_N_cbar'],
+            v_rng=(0.0, 3.0),
             cmap=cm.get_cmap('Oranges'))
 
     print 'drawing OCS pseuoddata map'
