@@ -20,6 +20,63 @@ import plot_ReportOpt
 import plot_emifac_boxplots
 import plot_tobspred_emifac
 
+class STEMRun(object):
+    """
+    container class for data useful for summarizing a STEM run.
+    Attributes are:
+    - run_dir: str; full path to the run directory for the STEM run
+    - input_dir: str; full path to the directory containing the run's
+      input files
+    - prior_flux_fname: str; full path to the input file specifying
+      prior OCS flux
+    - coord_fname: str; full path to the input file specifying STEM
+      grid latitude & longitude
+    - top_fnames: str; full paths of all t_obs_pred*.dat files from the STEM run
+    - prior_ocs_flux: 2D numpy array; prior OCS flux [mol m-2 s-1]
+    - post_ocs_flux: 2D numpy array; posterior OCS flux [mol m-2 s-1]
+    - prior_ocs_conc: 2D numpy array; prior OCS concentration [ppbv]
+    - post_ocs_conc: 2D numpy array; posterior OCS concentration [ppbv]
+
+    """
+
+    def __init__(self,
+                 input_dir,
+                 run_dir,
+                 prior_flx_fname='surfem-124x124-casa-cos_2008_2009.nc',
+                 coord_fname = 'TOPO-124x124.nc'):
+        '''
+        populate a STEMRun object from a specified run directory and
+        input directory.  prior_flux_fname specifies the basename of
+        the I/O API file containing prior OCS fluxes.  coord_fname
+        specifies the basename of the I/O API file containing the
+        latitudes and longitudes of the STEM grid cell centers.
+        '''
+        self.input_dir = input_dir
+        self.run_dir = run_dir
+        self.prior_flx_fname=os.path.join(self.input_dir,
+                                          prior_flx_fname)
+        self.coord_fname=os.path.join(self.input_dir,
+                                      coord_fname)
+
+        # get intial and final t_obs_pred.dat file names
+        self.top_fnames = STEM_parsers.get_all_tobspred_fnames(
+            self.run_dir)
+
+        fnl_top_data = STEM_parsers.parse_tobspred(self.top_fnames[-1])
+        self.final_emifac = STEM_vis.grid_tobspred_data(fnl_top_data,
+                                                        which_data='emi_fac')
+
+        self.prior_ocs_flux = STEM_vis.get_midday_mean_ocs_flux(
+            self.prior_flx_fname)
+        self.post_ocs_flux = self.prior_ocs_flux * self.final_emifac
+
+        ini_top_data = STEM_parsers.parse_tobspred(self.top_fnames[0])
+        self.prior_ocs_conc = STEM_vis.grid_tobspred_data(ini_top_data,
+                                                          which_data='ocs_obs')
+        self.post_ocs_conc = STEM_vis.grid_tobspred_data(fnl_top_data,
+                                                         which_data='ocs_mod')
+
+
 def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
     """create a figure and axes instances to hold STEM run summary
     plots.  Returns a tuple containing the figure and a list of axes"""
@@ -140,6 +197,71 @@ def get_AQOUT_midday_mean_ocs_flux(AQOUT_fname):
     mean_flx = ocs_flux['data'][idx_midday, :, :].mean(axis=0)
     return(mean_flx)
 
+def create_summary(this_run,
+                   note,
+                   outfile='STEM_run_summary.pdf',
+                   n_plots=8):
+    [fig, ax_list] = initialize_plotting_objects(n_plots)
+
+    print 'plotting summary text panel'
+    summary_text_panel(ax_list['text_panel'],
+                       this_run.run_dir,
+                       this_run.input_dir,
+                       note=note)
+
+    print 'plotting cost function'
+    report_opt_df = STEM_parsers.parse_reportopt(os.path.join(this_run.run_dir,
+                                                              'Report.opt'))
+    plot_ReportOpt.plot_reportopt(report_opt_df, ax=ax_list['cost_func'])
+
+    print 'plotting emi_fac boxplots'
+    emi_fac = STEM_parsers.parse_all_emifac(this_run.run_dir, mask_ones=False)
+    plot_emifac_boxplots.draw_boxplots(emi_fac, ax=ax_list['emi_fac_boxplots'])
+
+    sys.stdout.write('drawing posterior emissions factors map:')
+    if this_run.top_fnames:
+        sys.stdout.write(os.path.basename(this_run.top_fnames[-1]) + '\n')
+        sys.stdout.flush()
+        n_iter = len(this_run.top_fnames)
+        emi_fac_map = plot_tobspred_emifac.draw_plot(
+            this_run.run_dir,
+            this_run.input_dir,
+            this_run.top_fnames[-1],
+            n_iter,
+            t_str='final emissions factors',
+            ax=ax_list['emi_fac_map_final'],
+            cb_axis=ax_list['emi_fac_map_final_cbar'],
+            v_rng=(0.0, None),
+            extend='max',
+            cmap=cm.get_cmap('Oranges'))
+
+
+    print 'drawing OCS posterior concentration'
+    run_dir_fwd = '/home/thilton/Stem_emi2_onespecies_big_ocssib/run.TWH_fwd_dummy'
+    final_tobs_pred = STEM_parsers.get_all_tobspred_fnames(this_run.run_dir)[-1]
+    post_ocs_conc_map = STEM_vis.plot_gridded_data(this_run.input_dir,
+                                                   this_run.post_ocs_conc,
+                                                   ax_list['post_conc_map'],
+                                                   ax_list['post_conc_cbar'],
+                                                   t_str='posterior [OCS]',
+                                                   cbar_t_str='OCS [ppbv]')
+    print 'drawing OCS posterior flux'
+    post_ocs_flux_map = STEM_vis.plot_gridded_data(
+        this_run.input_dir,
+        this_run.post_ocs_flux,
+        ax_list['post_flux_map'],
+        ax_list['post_flux_cbar'],
+        t_str='posterior OCS flux',
+        cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
+        cmap=cm.get_cmap('Greens_r'),
+        vmin=-2.5e-10,
+        vmax=0.0,
+        extend='min')
+
+    print 'saving the summary to ' + outfile
+    fig.savefig(args.outfile)
+
+
 if __name__ == "__main__":
     """
     TODO: make run, input directory arguments
@@ -177,101 +299,12 @@ if __name__ == "__main__":
                               'in the summary text panel.'))
     args = parser.parse_args()
 
+    this_run = STEMRun(args.input_dir,
+                       args.run_dir)
+
     matplotlib.rcParams.update({'font.size': 8})
     #plt.rcdefaults # restore defaults
 
-
-    n_plots = 8
-    [fig, ax_list] = initialize_plotting_objects(n_plots)
-
-    print 'plotting summary text panel'
-    summary_text_panel(ax_list['text_panel'],
-                       args.run_dir,
-                       args.input_dir,
-                       note=args.note)
-
-    print 'plotting cost function'
-    report_opt_df = STEM_parsers.parse_reportopt(os.path.join(args.run_dir,
-                                                              'Report.opt'))
-    plot_ReportOpt.plot_reportopt(report_opt_df, ax=ax_list['cost_func'])
-
-    print 'plotting emi_fac boxplots'
-    emi_fac = STEM_parsers.parse_all_emifac(args.run_dir, mask_ones=False)
-    plot_emifac_boxplots.draw_boxplots(emi_fac, ax=ax_list['emi_fac_boxplots'])
-
-    sys.stdout.write('drawing emissions factors map: ')
-    file_list = STEM_parsers.get_all_tobspred_fnames(args.run_dir)
-    if file_list:
-        sys.stdout.write(os.path.basename(file_list[-1]) + '\n')
-        sys.stdout.flush()
-        file_list = sorted(file_list)
-        n_iter = len(file_list)
-        midway_through = int(np.floor(n_iter / 2))
-        emi_fac_map = plot_tobspred_emifac.draw_plot(
-            args.run_dir,
-            args.input_dir,
-            file_list[-1],
-            n_iter,
-            t_str='final emissions factors',
-            ax=ax_list['emi_fac_map_final'],
-            cb_axis=ax_list['emi_fac_map_final_cbar'],
-            v_rng=(0.0, None),
-            extend='max',
-            cmap=cm.get_cmap('Oranges'))
-        sys.stdout.write('drawing emissions factors map: ' +
-                         os.path.basename(file_list[midway_through]) +
-                         '\n')
-        sys.stdout.flush()
-        emi_fac_map = plot_tobspred_emifac.draw_plot(
-            args.run_dir,
-            args.input_dir,
-            file_list[midway_through],
-            n_iter,
-            t_str='emissions factors, iteration {}'.format(midway_through),
-            ax=ax_list['emi_fac_map_N'],
-            cb_axis=ax_list['emi_fac_map_N_cbar'],
-            v_rng=(0.0, None),
-            extend='max',
-            cmap=cm.get_cmap('Oranges'))
-
-    # print 'drawing OCS pseuoddata map'
-    # psuedodata_OCS_map = plot_inputdat_conc(args.input_dir,
-    #                                         args.run_dir,
-    #                                         ax_list['pseudo_map'],
-    #                                         ax_list['pseudo_map_cbar'],
-    #                                         t_str='pseudodata',
-    #                                         cbar_t_str='OCS [ppbv]')
-
-    print 'drawing OCS posterior concentration'
-    run_dir_fwd = '/home/thilton/Stem_emi2_onespecies_big_ocssib/run.TWH_fwd_dummy'
-    final_tobs_pred = STEM_parsers.get_all_tobspred_fnames(args.run_dir)[-1]
-    post_ocs_conc_map = plot_tobspred_conc(args.input_dir,
-                                           final_tobs_pred,
-                                           args.run_dir,
-                                           ax_list['post_conc_map'],
-                                           ax_list['post_conc_cbar'],
-                                           t_str='posterior [OCS]',
-                                           cbar_t_str='OCS [ppbv]')
-    print 'drawing OCS posterior flux'
-    tobspred_data = STEM_parsers.parse_tobspred(final_tobs_pred)
-    gridded_emifac = STEM_vis.coords_to_grid(
-        tobspred_data['emi_fac']['x'].values,
-        tobspred_data['emi_fac']['y'].values,
-        tobspred_data['emi_fac']['emi_fac'].values)
-    mean_prior_flux = STEM_vis.get_midday_mean_ocs_flux(
-        os.path.join(args.input_dir,
-                     'surfem-124x124-casa-cos_2008_2009.nc'))
-    mean_post_flux = mean_prior_flux * gridded_emifac
-    STEM_vis.plot_gridded_data(args.input_dir,
-                               mean_post_flux,
-                               ax_list['post_flux_map'],
-                               ax_list['post_flux_cbar'],
-                               t_str='posterior OCS flux',
-                               cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
-                               cmap=cm.get_cmap('Greens_r'),
-                               vmin=-2.5e-10,
-                               vmax=0.0,
-                               extend='min')
-
-    print 'saving the summary to ' + args.outfile
-    fig.savefig(args.outfile)
+    create_summary(this_run,
+                   args.note,
+                   args.outfile)
