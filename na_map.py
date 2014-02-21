@@ -114,10 +114,13 @@ class NAMapFigure(object):
                              vmin=None,
                              n_levs=20,
                              cmap=cm.get_cmap('Blues'),
+                             extend='neither',
                              cbar_t_str=None,
                              colorbar_args={}):
         """Draw filled contours of the specified OCS data over the
-        map."""
+        map.  Extend must be one of [ 'neither' | 'both' | 'min' |
+        'max' ], and is passed to matplotlib.pyplot.contourf via the
+        'extend' keyword."""
 
         if vmin is None:
             vmin = data.min()
@@ -134,6 +137,7 @@ class NAMapFigure(object):
                                data,
                                ax=self.ax_map,
                                levels=contour_levs,
+                               extend=extend,
                                latlon=True,
                                cmap=cmap)
         if self.ax_cmap is not None:

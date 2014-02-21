@@ -151,10 +151,16 @@ def parse_all_emifac(run_dir, mask_ones=True):
 
 def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
     """ Parse a STEM variable from a STEM I/O API netcdf file.
-    varname must be a variable in the netcdf file. The file must also
-    contain a variable TFLAG containing timestamps in the format
-    <YYYYDDD,HHMMSS>.  Returns the values in varname as well as the
-    timestamps (as datenum.datenum objects)."""
+    varname (type str) must be a variable in the netcdf file. The file
+    must also contain a variable TFLAG containing timestamps in the
+    format <YYYYDDD,HHMMSS>.  If specified, t0 and t1
+    (datetime.datetime) restrict the returned data to timestamps that
+    satisfy t0 <= timestamp <= t1.  If t0 and t1 are not specified
+    then all timestamps are returned.
+
+    RETURNS a dict with keys 'data' and 't'.  'data' contains the
+    values in varname (np.ndarray) and 't' contains the timestamps
+    (datenum.datenum objects)."""
     nc = Dataset(nc_fname, 'r', format='NETCDF4')
     # read timestamps to datetime.datetime
     t = np.squeeze(nc.variables['TFLAG'])
@@ -165,7 +171,7 @@ def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
     t_idx = (t_dt >= t0) & (t_dt <= t1)
     # retrieve the requested [OCS] data
     data = nc.variables[varname][t_idx, 0, :, : ]
-    return( data, t_dt[t_idx] )
+    return({'data':data, 't':t_dt[t_idx]})
 
 def parse_STEM_coordinates(topo_fname):
     """Parse STEM grid latitude and longitude."""

@@ -51,7 +51,7 @@ cs_1p0 = m_1p0.add_ocs_contour_plot(lons=lon,
                                cbar_t_str='[OCS], ppbv')
 
 delta_ocs = ocs_1p5 - ocs_1p0
-m_diff = na_map.NAMapFigure(t_str="$\Delta$[OCS], 1.5x - 1.0x CASA sfc flux",
+m_diff = na_map.NAMapFigure(t_str=r"$\Delta$[OCS], 1.5x - 1.0x CASA sfc flux",
                            missing_axis=False)
 cmap_diff = cm.get_cmap('winter')
 cs_diff = m_diff.add_ocs_contour_plot(lons=lon,
@@ -62,13 +62,13 @@ cs_diff = m_diff.add_ocs_contour_plot(lons=lon,
                                      vmin=-np.abs(delta_ocs).max(),
                                      cbar_t_str='[OCS], ppbv')
 
-m_gt0 = na_map.NAMapFigure(t_str="$\Delta$[OCS] > 0",
+m_gt0 = na_map.NAMapFigure(t_str=r"$\Delta$[OCS] > 0",
                            missing_axis=False)
 delta_gt0 = np.ma.masked_array(delta_ocs, delta_ocs < 0)
 cs_diff = m_gt0.add_ocs_contour_plot(lons=lon,
                                      lats=lat,
                                      data=delta_gt0.mask,
-                                     cbar_t_str='$\Delta$[OCS] > 0')
+                                     cbar_t_str=r'$\Delta$[OCS] > 0')
 
 # make sure the STEM grid is oriented correctly -- the TOPO input
 # netcdf file says in its attributes that the origin is in the SE

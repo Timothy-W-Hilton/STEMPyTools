@@ -20,7 +20,8 @@ def draw_plot(run_dir,
               t_str=None,
               cb_axis=True,
               v_rng=(0.0, 10.0),
-              cmap=cm.get_cmap('Blues'),):
+              cmap=cm.get_cmap('Blues'),
+              extend='neither'):
     #parse input.dat
     inputdat_fname = os.path.join( run_dir, 'input.dat')
     inputdat = parse_inputdat(inputdat_fname)
@@ -48,6 +49,7 @@ def draw_plot(run_dir,
                                   tobspred_gridded,
                                   vmin=v_rng[0],
                                   vmax=v_rng[1],
+                                  extend=extend,
                                   cbar_t_str='emi_fac',
                                   colorbar_args={'format': '%0.2f'},
                                   cmap=cmap)

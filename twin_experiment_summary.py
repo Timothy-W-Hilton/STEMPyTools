@@ -3,10 +3,11 @@ produce a one-page PDF showing some plots that describe the twin
 experiments setup
 """
 
-
 import matplotlib
-matplotlib.use('Agg')   # this seems to get around the 'couldn't connect to display "localhost:10.0" error' that crops up now and then -- TWH
-
+matplotlib.use('Agg') # this seems to get around the 'couldn't connect
+                        # to display "localhost:10.0" error' that
+                        # crops up now and then -- TWH
+from matplotlib import rc
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
@@ -15,7 +16,7 @@ import os
 import os.path
 import pdb
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 
 import STEM_parsers
@@ -32,6 +33,9 @@ class twinExperimentSummary(object):
     def __init__(self,
                  outfile_fname,
                  input_dir):
+
+        self.input_dir = input_dir
+        self.outfile_fname = outfile_fname
 
         self.fig, self.axes_list = self.initialize_plotting_objects()
 
@@ -52,8 +56,6 @@ class twinExperimentSummary(object):
             'Stem_emi2_onespecies_big_ocssib',
             'run.TWH_opt_test_large_slab_weak_prior_0.8',
             'input.dat')
-        self.input_dir = input_dir
-        self.outfile_fname = outfile_fname
 
         #get the gridded concentrations
         self.gridded_ocs_1p0x = self.grid_tobspred_data(self.ocs_conc_1p0x)
@@ -71,7 +73,7 @@ class twinExperimentSummary(object):
                                self.gridded_ocs_1p0x,
                                self.axes_list['ocs_conc_1.0_map'],
                                self.axes_list['ocs_conc_1.0_cbar'],
-                               t_str='A. STEM forward run\n("true concentration")',
+                               t_str='A. STEM forward run\n("true" [OCS])',
                                cbar_t_str='[OCS] (ppbv)',
                                vmin=ocs_rng[0],
                                vmax=ocs_rng[1])
@@ -96,21 +98,32 @@ class twinExperimentSummary(object):
                                vmin=ocs_rng[0],
                                vmax=ocs_rng[1])
         print 'drawing OCS flux prior map'
+        prior_flx = STEM_vis.get_midday_mean_ocs_flux(
+            nc_fname=os.path.join(self.input_dir,
+                                  'surfem-124x124-casa-cos_2008_2009.nc'))
         self.plot_gridded_data(
             self.input_dir,
-            np.ones(self.gridded_ocs_1p0x.shape),
+            prior_flx,
             self.axes_list['ocs_prior_flux_map'],
             self.axes_list['ocs_prior_flux_cbar'],
-            t_str=('F. OCS flux prior\n(placeholder for now)'),
-            cbar_t_str='OCS flux')
-        print 'drawing OCS flux posterior map'
-        self.plot_gridded_data(
-            self.input_dir,
-            np.ones(self.gridded_ocs_1p0x.shape),
-            self.axes_list['ocs_post_flux_map'],
-            self.axes_list['ocs_post_flux_cbar'],
-            t_str=('G. OCS flux posterior\n(placeholder for now)'),
-            cbar_t_str='OCS flux')
+            t_str=('F. prior OCS flux (from CASA)'),
+            cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
+            vmin=-2.5e-10,
+            vmax=prior_flx.max(),
+            cmap=cm.get_cmap('Greens_r'),
+            colorbar_args={'format':'%0.1e'})
+        # print 'drawing OCS flux posterior map'
+        # self.plot_gridded_data(
+        #     self.input_dir,
+        #     self.get_midday_mean_ocs_flux(
+        #         nc_fname=os.path.join(
+        #             self.run_dir,
+        #             output,
+        #             'AQOUT-124x124-22levs-casa-cos_2008_2009.nc')),
+        #     self.axes_list['ocs_post_flux_map'],
+        #     self.axes_list['ocs_post_flux_cbar'],
+        #     t_str=('G. OCS flux posterior'),
+        #     cbar_t_str='OCS flux')
 
         #plot delta OCS contours
         delta_1p5_1p0 = self.gridded_ocs_1p5x - self.gridded_ocs_1p0x
@@ -123,8 +136,8 @@ class twinExperimentSummary(object):
             delta_1p5_1p0,
             self.axes_list['ocs_conc_1.5_1.0_delta_map'],
             self.axes_list['ocs_conc_1.5_1.0_delta_cbar'],
-            t_str='C. Delta [OCS], F=1.5 - F=1.0 ',
-            cbar_t_str='Delta [OCS] (ppbv)',
+            t_str=r'C. $\Delta$ [OCS], F=1.5 - F=1.0 ',
+            cbar_t_str=r'$\Delta$ [OCS] (ppbv)',
             vmin=delta_rng[0],
             vmax=delta_rng[1],
             cmap=cm.get_cmap('Reds'))
@@ -134,8 +147,8 @@ class twinExperimentSummary(object):
             delta_1p0_0p8,
             self.axes_list['ocs_conc_1.0_0.8_delta_map'],
             self.axes_list['ocs_conc_1.0_0.8_delta_cbar'],
-            t_str='E. Delta [OCS], F=1.0 - F=0.8x',
-            cbar_t_str='Delta [OCS] (ppbv)',
+            t_str=r'E. $\Delta$ [OCS], F=1.0 - F=0.8x',
+            cbar_t_str=r'$\Delta$ [OCS] (ppbv)',
             vmin=delta_rng[0],
             vmax=delta_rng[1],
             cmap=cm.get_cmap('Reds'))
@@ -177,9 +190,9 @@ class twinExperimentSummary(object):
         ax_list.update({'ocs_conc_1.5_1.0_delta_map':fig.add_subplot(gs2[1, 0:7]),
                         'ocs_conc_1.5_1.0_delta_cbar':fig.add_subplot(gs2[1, 8]),
                         'ocs_conc_1.0_0.8_delta_map':fig.add_subplot(gs2[2, 0:7]),
-                        'ocs_conc_1.0_0.8_delta_cbar':fig.add_subplot(gs2[2, 8]),
-                        'ocs_post_flux_map':fig.add_subplot(gs2[3, 0:7]),
-                        'ocs_post_flux_cbar':fig.add_subplot(gs2[3, 8])})
+                        'ocs_conc_1.0_0.8_delta_cbar':fig.add_subplot(gs2[2, 8])})
+                        # 'ocs_post_flux_map':fig.add_subplot(gs2[3, 0:7]),
+                        # 'ocs_post_flux_cbar':fig.add_subplot(gs2[3, 8])})
 
         return((fig, ax_list))
 
@@ -207,7 +220,8 @@ class twinExperimentSummary(object):
                           cbar_t_str='',
                           vmin=0.0,
                           vmax=0.8,
-                          cmap=cm.get_cmap('Blues')):
+                          cmap=cm.get_cmap('Blues'),
+                          colorbar_args={'format': '%0.2f'}):
 
         lon, lat, topo = STEM_parsers.parse_STEM_coordinates(
             os.path.join(input_dir, 'TOPO-124x124.nc'))
@@ -221,7 +235,7 @@ class twinExperimentSummary(object):
                                      vmin=vmin,
                                      vmax=vmax,
                                      cbar_t_str=cbar_t_str,
-                                     colorbar_args={'format': '%0.2f'},
+                                     colorbar_args=colorbar_args,
                                      cmap=cmap)
         return(map_obj)
 

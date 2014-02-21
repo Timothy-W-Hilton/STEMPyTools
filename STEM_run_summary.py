@@ -1,15 +1,16 @@
 import matplotlib
-matplotlib.use('Agg')   # this seems to get around the 'couldn't connect to display "localhost:10.0" error' that crops up now and then -- TWH  
+matplotlib.use('Agg')   # this seems to get around the 'couldn't connect to display "localhost:10.0" error' that crops up now and then -- TWH
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
+from matplotlib import rc
 import numpy as np
 import os
 import os.path
 import pdb
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 
 import STEM_parsers
@@ -37,20 +38,20 @@ def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
     ax_list.update({'cost_func':fig.add_subplot(gs1[1, 0:9]),
                     'emi_fac_map_final':fig.add_subplot(gs1[2, 0:7]),
                     'emi_fac_map_final_cbar':fig.add_subplot(gs1[2, 8]),
-                    'pseudo_map':fig.add_subplot(gs1[3, 0:7]),
-                    'pseudo_map_cbar':fig.add_subplot(gs1[3, 8])})
+                    'post_conc_map':fig.add_subplot(gs1[3, 0:7]),
+                    'post_conc_cbar':fig.add_subplot(gs1[3, 8])})
     #define spacing for right-hand column of panels
     gs2 = gridspec.GridSpec(n_rows, n_cols)
     gs2.update(left=0.55, right=0.95, wspace=0.05, hspace=0.30)
     ax_list.update({'emi_fac_boxplots':fig.add_subplot(gs2[1, 0:9]),
                     'emi_fac_map_N':fig.add_subplot(gs2[2, 0:7]),
                     'emi_fac_map_N_cbar':fig.add_subplot(gs2[2, 8]),
-                    'fwd_map':fig.add_subplot(gs2[3, 0:7]),
-                    'fwd_map_cbar':fig.add_subplot(gs2[3, 8])})
+                    'post_flux_map':fig.add_subplot(gs2[3, 0:7]),
+                    'post_flux_cbar':fig.add_subplot(gs2[3, 8])})
 
     return((fig, ax_list))
 
-def summary_text_panel(ax, run_dir, input_dir, fontsize=8, note=''):
+def summary_text_panel(ax, run_dir, input_dir, fontsize=8, note=' '):
     ax.clear()
     txt = ('STEM run summary - produced ' +
            datetime.strftime(datetime.now(), '%d %b %Y %H:%M:%S') + '\n' +
@@ -71,8 +72,8 @@ def plot_inputdat_conc(input_dir,
                        run_dir,
                        map_axis,
                        cb_axis,
-                       t_str='',
-                       cbar_t_str=''):
+                       t_str=' ',
+                       cbar_t_str=' '):
 
     input_dat = STEM_parsers.parse_inputdat(os.path.join(run_dir, 'input.dat'))
     gridded_input_dat = STEM_vis.coords_to_grid(input_dat['x'].values,
@@ -98,8 +99,8 @@ def plot_tobspred_conc(input_dir,
                        run_dir,
                        map_axis,
                        cb_axis,
-                       t_str='',
-                       cbar_t_str=''):
+                       t_str=' ',
+                       cbar_t_str=' '):
 
     tobspred = STEM_parsers.parse_tobspred(os.path.join(run_dir,
                                                         tobspred_fname))
@@ -115,11 +116,29 @@ def plot_tobspred_conc(input_dir,
     m_conc.add_ocs_contour_plot(lon,
                                 lat,
                                 gridded_tobspred,
-                                vmin=0.0,
-                                vmax=0.8,
+                                vmin=gridded_tobspred.min(),
+                                vmax=gridded_tobspred.max(),
                                 cbar_t_str=cbar_t_str,
                                 colorbar_args={'format': '%0.2f'})
     return(m_conc)
+
+def get_AQOUT_midday_mean_ocs_flux(AQOUT_fname):
+    """
+    Parses an OCS flux I/O API file (e.g. CASA surface fluxes or a
+    STEM AQOUT file) and caculates the mean OCS fluxes for the hours
+    10:00 to 15:00.  The input file must contain the netcdf variables T_FLAG and ocs
+
+    RETURNS a 2D numpy array of gridded mean OCS fluxes.
+    """
+    t0 = datetime(2008,6,1)
+    ocs_flux = STEM_parsers.parse_STEM_var(nc_fname=AQOUT_fname,
+                                           t0=t0,
+                                           t1=t0 + timedelta(days=7),
+                                           varname='CO2_TRACER1')
+    idx_midday = np.array(
+        [(t.hour >= 10) and (t.hour <= 15) for t in ocs_flux['t']])
+    mean_flx = ocs_flux['data'][idx_midday, :, :].mean(axis=0)
+    return(mean_flx)
 
 if __name__ == "__main__":
     """
@@ -136,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--run_dir',
                         nargs='?',
                         type=str,
-                        default='',
+                        default=' ',
                         help=('the STEM run directory. Must ' +
                               'contain t_obs_pred*.dat and input.dat'))
     parser.add_argument('-i', '--input_dir',
@@ -153,7 +172,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--note',
                         nargs='?',
                         type=str,
-                        default='',
+                        default=' ',
                         help=('optional user-specified text to appear' +
                               'in the summary text panel.'))
     args = parser.parse_args()
@@ -196,7 +215,8 @@ if __name__ == "__main__":
             t_str='final emissions factors',
             ax=ax_list['emi_fac_map_final'],
             cb_axis=ax_list['emi_fac_map_final_cbar'],
-            v_rng=(0.0, 3.0),
+            v_rng=(0.0, None),
+            extend='max',
             cmap=cm.get_cmap('Oranges'))
         sys.stdout.write('drawing emissions factors map: ' +
                          os.path.basename(file_list[midway_through]) +
@@ -210,26 +230,48 @@ if __name__ == "__main__":
             t_str='emissions factors, iteration {}'.format(midway_through),
             ax=ax_list['emi_fac_map_N'],
             cb_axis=ax_list['emi_fac_map_N_cbar'],
-            v_rng=(0.0, 3.0),
+            v_rng=(0.0, None),
+            extend='max',
             cmap=cm.get_cmap('Oranges'))
 
-    print 'drawing OCS pseuoddata map'
-    psuedodata_OCS_map = plot_inputdat_conc(args.input_dir,
-                                            args.run_dir,
-                                            ax_list['pseudo_map'],
-                                            ax_list['pseudo_map_cbar'],
-                                            t_str='pseudodata',
-                                            cbar_t_str='OCS [ppbv]')
+    # print 'drawing OCS pseuoddata map'
+    # psuedodata_OCS_map = plot_inputdat_conc(args.input_dir,
+    #                                         args.run_dir,
+    #                                         ax_list['pseudo_map'],
+    #                                         ax_list['pseudo_map_cbar'],
+    #                                         t_str='pseudodata',
+    #                                         cbar_t_str='OCS [ppbv]')
 
-    print 'drawing OCS prior concentration'
+    print 'drawing OCS posterior concentration'
     run_dir_fwd = '/home/thilton/Stem_emi2_onespecies_big_ocssib/run.TWH_fwd_dummy'
-    fwd_OCS_map = plot_tobspred_conc(args.input_dir,
-                                     't_obs_pred_1.0x.dat',
-                                     run_dir_fwd,
-                                     ax_list['fwd_map'],
-                                     ax_list['fwd_map_cbar'],
-                                     t_str='STEM forward run',
-                                     cbar_t_str='OCS [ppbv]')
+    final_tobs_pred = STEM_parsers.get_all_tobspred_fnames(args.run_dir)[-1]
+    post_ocs_conc_map = plot_tobspred_conc(args.input_dir,
+                                           final_tobs_pred,
+                                           args.run_dir,
+                                           ax_list['post_conc_map'],
+                                           ax_list['post_conc_cbar'],
+                                           t_str='posterior [OCS]',
+                                           cbar_t_str='OCS [ppbv]')
+    print 'drawing OCS posterior flux'
+    tobspred_data = STEM_parsers.parse_tobspred(final_tobs_pred)
+    gridded_emifac = STEM_vis.coords_to_grid(
+        tobspred_data['emi_fac']['x'].values,
+        tobspred_data['emi_fac']['y'].values,
+        tobspred_data['emi_fac']['emi_fac'].values)
+    mean_prior_flux = STEM_vis.get_midday_mean_ocs_flux(
+        os.path.join(args.input_dir,
+                     'surfem-124x124-casa-cos_2008_2009.nc'))
+    mean_post_flux = mean_prior_flux * gridded_emifac
+    STEM_vis.plot_gridded_data(args.input_dir,
+                               mean_post_flux,
+                               ax_list['post_flux_map'],
+                               ax_list['post_flux_cbar'],
+                               t_str='posterior OCS flux',
+                               cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
+                               cmap=cm.get_cmap('Greens_r'),
+                               vmin=-2.5e-10,
+                               vmax=0.0,
+                               extend='min')
 
     print 'saving the summary to ' + args.outfile
     fig.savefig(args.outfile)
