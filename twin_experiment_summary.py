@@ -26,6 +26,8 @@ import plot_ReportOpt
 import plot_emifac_boxplots
 import plot_tobspred_emifac
 
+import STEM_run_summary
+
 class twinExperimentSummary(object):
     """class to provide a container for stuff needed for summary
     figure of twin experiment"""
@@ -266,3 +268,46 @@ if __name__ == "__main__":
     matplotlib.rcParams.update({'font.size': 8})
     summary_obj = twinExperimentSummary(outfile_fname=args.outfile,
                                         input_dir=args.input_dir)
+
+    STEM_root = os.path.join(os.getenv('HOME'),
+                             'Stem_emi2_onespecies_big_ocssib')
+
+    this_run = STEM_run_summary.STEMRun(
+        args.input_dir,
+        os.path.join(STEM_root,
+                     'run.TWH_opt_test_large_slab_weak_prior_0.8'))
+    STEM_run_summary.create_summary(
+        this_run,
+        note='F = 0.8x, prior uncertainty = 10.0',
+        outfile=os.path.join(os.getenv('PLOTS'),
+                             'STEM_summary_0.8_weak_priors.pdf'))
+
+    this_run = STEM_run_summary.STEMRun(
+        args.input_dir,
+        os.path.join(STEM_root,
+                     'run.TWH_opt_test_large_slab_strong_prior'))
+    STEM_run_summary.create_summary(
+        this_run,
+        note='F = 1.5x, prior uncertainty = 0.5',
+        outfile=os.path.join(os.getenv('PLOTS'),
+                             'STEM_summary_1.5_strong_priors.pdf'))
+
+    this_run = STEM_run_summary.STEMRun(
+        args.input_dir,
+        os.path.join(STEM_root,
+                     'run.TWH_opt_test_large_slab_13Feb'))
+    STEM_run_summary.create_summary(
+        this_run,
+        note='F = 1.5x, prior uncertainty = 10.0',
+        outfile=os.path.join(os.getenv('PLOTS'),
+                             'STEM_summary_1.5_weak_priors.pdf'))
+
+    this_run = STEM_run_summary.STEMRun(
+        args.input_dir,
+        os.path.join(STEM_root,
+                     'run.TWH_opt_test_large_slab_bcgd0'))
+    STEM_run_summary.create_summary(
+        this_run,
+        note='F = 1.5x, background error = 0',
+        outfile=os.path.join(os.getenv('PLOTS'),
+                             'STEM_summary_1.5_no_priors.pdf'))
