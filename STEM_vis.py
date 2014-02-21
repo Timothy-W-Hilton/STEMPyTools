@@ -23,26 +23,40 @@ def initialize_STEM_map():
     legend turned off."""
     return(na_map.NAMapFigure(missing_axis=None, cb_axis=True))
 
-def grid_inputdat_data(self, input_dat_file):
-    input_dat = STEM_parsers.parse_inputdat(input_dat_file)
+def grid_inputdat_data(input_dat_data):
+    """
+    place input.dat OCS concentrations into a 2D numpy array.
+    input_dat_data is the output of STEM_parsers.parse_inputdat().
+    """
     gridded_input_dat = STEM_vis.coords_to_grid(input_dat['x'].values,
                                                 input_dat['y'].values,
                                                 input_dat['COS'].values)
     return(gridded_input_dat)
 
-def grid_tobspred_data(tobspred):
+def grid_tobspred_data(tobspred, which_data='ocs_mod'):
     """
     Translate parsed columnar t_obs_pred.dat OCS concentrations from a
     data frame to a 2D numpy array.  tobspred is a dict containing two
     pandas data.frames; this will usually be the output of
     STEM_parsers.parse_tobs_pred.
 
+    which_data: {'ocs_mod'}|'ocs_obs'|'emi_fac'; allows the caller to
+    request either OCS model concentrations, OCS observed
+    concentrations, or emissions factors from the t_obs_pred.dat file.
+
     RETURNS a 2D numpy array of gridded OCS concentrations.
     """
-    gridded_tobspred = STEM_vis.coords_to_grid(
-        tobspred['emi_fac']['x'].values,
-        tobspred['emi_fac']['y'].values,
-        tobspred['ocs_conc']['mod'].values)
+
+    if which_data is 'ocs_obs':
+        data = tobspred['ocs_conc']['obs'].values
+    elif which_data is 'ocs_mod':
+        data = tobspred['ocs_conc']['mod'].values
+    elif which_data is 'emi_fac':
+        data = tobspred['emi_fac']['emi_fac'].values
+
+    gridded_tobspred = coords_to_grid(tobspred['emi_fac']['x'].values,
+                                      tobspred['emi_fac']['y'].values,
+                                      data)
     return(gridded_tobspred)
 
 def plot_gridded_data(input_dir,
