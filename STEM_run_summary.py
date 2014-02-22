@@ -101,8 +101,8 @@ def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
     gs2 = gridspec.GridSpec(n_rows, n_cols)
     gs2.update(left=0.55, right=0.95, wspace=0.05, hspace=0.30)
     ax_list.update({'emi_fac_boxplots':fig.add_subplot(gs2[1, 0:9]),
-                    'emi_fac_map_N':fig.add_subplot(gs2[2, 0:7]),
-                    'emi_fac_map_N_cbar':fig.add_subplot(gs2[2, 8]),
+                    'd_OCS_conc_map':fig.add_subplot(gs2[2, 0:7]),
+                    'd_OCS_conc_cbar':fig.add_subplot(gs2[2, 8]),
                     'post_flux_map':fig.add_subplot(gs2[3, 0:7]),
                     'post_flux_cbar':fig.add_subplot(gs2[3, 8])})
 
@@ -235,6 +235,19 @@ def create_summary(this_run,
             extend='max',
             cmap=cm.get_cmap('Oranges'))
 
+    sys.stdout.write('drawing prior concentration '
+                     'minus posterior concentration map:')
+    d_conc = this_run.prior_ocs_conc - this_run.post_ocs_conc
+    d_conc_map = STEM_vis.plot_gridded_data(
+        this_run.input_dir,
+        d_conc,
+        ax_list['d_OCS_conc_map'],
+        ax_list['d_OCS_conc_cbar'],
+        t_str=r'$\Delta$ [OCS], prior - posterior',
+        cbar_t_str=r'$\Delta$ [OCS] (ppbv)',
+        vmin=d_conc.min(),
+        vmax=d_conc.max(),
+        cmap=cm.get_cmap('Oranges'))
 
     print 'drawing OCS posterior concentration'
     run_dir_fwd = '/home/thilton/Stem_emi2_onespecies_big_ocssib/run.TWH_fwd_dummy'
@@ -259,7 +272,7 @@ def create_summary(this_run,
         extend='min')
 
     print 'saving the summary to ' + outfile
-    fig.savefig(args.outfile)
+    fig.savefig(outfile)
 
 
 if __name__ == "__main__":
