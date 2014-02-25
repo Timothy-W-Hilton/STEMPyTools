@@ -47,27 +47,30 @@ if __name__ == "__main__":
 						dest='input_dat_fname',
 						default=os.path.join(os.getcwd(), 'input.dat'),
 						const=os.path.join(os.getcwd(), 'input.dat'),
-						help=('the input.dat file'))
+						help=('full path to the input.dat file. '
+                              'The default is $PWD/input.dat'))
 	parser.add_argument('--t_obs_pred',
                         nargs='?',
                         type=str,
 						dest='t_obs_pred_fname',
                         default=os.path.join(os.getcwd(), 't_obs_pred.dat'),
 						const=os.path.join(os.getcwd(), 't_obs_pred.dat'),
-                        help=('the t_obs_pred.dat file'))
+                        help=('full path to the t_obs_pred.dat file. '
+                              'The default is $PWD/t_obs_pred.dat.'))
 	parser.add_argument('-o', '--outfile',
                         nargs='?',
                         type=str,
 						dest='outfile',
                         default=os.path.join(os.getcwd(), 'new_input.dat'),
                         const=os.path.join(os.getcwd(), 'new_input.dat'),
-                        help=('the new input.dat file to write'))
+                        help=('Full path to the new input.dat file to write. '
+                              'The default is $PWD/new_input.dat.'))
 	parser.add_argument('-f', '--factor',
                         nargs='?',
                         type=float,
                         default=1.0,
                         help=('factor to multiply t_obs_pred OCS ' +
-							  'concentrations by'))
+							  'concentrations by.  The default is 1.0.'))
 	args = parser.parse_args()
 
 
