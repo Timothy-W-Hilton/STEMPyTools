@@ -7,7 +7,7 @@ import re
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
-from datetime import datetime
+import datetime
 from netCDF4 import Dataset
 
 #--------------------------------------------------
@@ -38,6 +38,106 @@ def file_len(fname):
         for i, l in enumerate(f):
             pass
     return i + 1
+
+class StemRunFile(object):
+    """
+    Class to parse variable/value pairs from STEM run files.
+    CLASS ATTRIBUTES:
+    fname: the full path to the STEM run file
+    lines: list of str; all lines from the run file containing
+        variable assignments
+    vars: dict; variable name, value pairs
+    t_start: datetime.datetime; the starting time of the STEM simulation
+    t_end: datetime.datetime; the ending time of the STEM simulation
+    """
+    def __init__(self, fname):
+        """
+        Class constructor.  Parses the specified file and populates
+        lines and vars.
+
+        INPUTS
+        fname: str; full path to a STEM run file
+        """
+        self.fname=fname
+        self.parse_to_list()
+        self.trim_lines()
+        self.create_dict()
+        self.sub_vars()
+        self.calc_run_start()
+        self.calc_run_end()
+    def parse_to_list(self):
+        f = open(self.fname)
+        self.lines = f.readlines()
+        f.close()
+    def trim_lines(self):
+        """
+        discard lines from the run file that do not contain
+        variable/value assigments.  Lines that do not begin with a '#'
+        and do contain '=' or 'setenv' are assumed to be assignments
+        """
+        #get rid of comments
+        self.lines = [ln for ln in self.lines if ln[0] is not '#']
+        #keep variable assigments (shell and environment)
+        self.lines = [ln for ln in self.lines if
+                      ('=' in ln) or ('setenv' in ln)]
+    def create_dict(self):
+        """
+        for each line in the format
+        "var=val"
+        or
+        "sentenv var val"
+        put var and val into a dict
+        """
+        #re to match "var = val", with arbitrary whitespace around the =
+        m_eq = [re.search('(?P<var>\w+)=(?P<val>.+)', ln) for
+                ln in self.lines]
+        m_eq = [mat for mat in m_eq if mat is not None]
+        #re to match "setenv var val", with arbitrary whitespace separating
+        m_env = [re.search('setenv\s(?P<var>.+)\s(?P<val>.+)', ln) for
+                 ln in self.lines]
+        m_env = [mat for mat in m_env if mat is not None]
+
+        #combine the two lists of dicts into one big dict
+        merged_dict = {}
+        for m in m_eq:
+            d = m.groupdict()
+            merged_dict[d['var']] = d['val']
+        for m in m_env:
+            d = m.groupdict()
+            merged_dict[d['var']] = d['val']
+        self.vars=merged_dict
+    def sub_vars(self):
+        """
+        substitute environment variables referenced in the run file
+        with their values when the specify paths.  For variables in
+        the format $ABC_DEF, try first to replace from the other
+        variables defined in the run file.  If the variable is not
+        present, look within os environment variables.  If both fail
+        leave the variable unchanged.
+        """
+        for k in self.vars.keys():
+            # find environment variables
+            match = re.search('\$(?P<varname>[A-Z0-9_]+)', self.vars[k])
+            if match is not None:
+                varname = match.group('varname')
+                if ((varname in self.vars.keys()) and
+                    (os.path.exists(self.vars[varname]))):
+                    full_val = self.vars[varname]
+                    self.vars[k] = self.vars[k].replace('$' + varname,
+                                                        full_val)
+                elif ((os.getenv(varname) is not None) and
+                    (os.path.exists(os.getenv(varname)))):
+                    full_val = os.getenv(varname)
+                    self.vars[k] = self.vars[k].replace('$' + varname,
+                                                        full_val)
+    def calc_run_start(self):
+        t = (datetime.datetime.strptime(self.vars['istday'], '%Y %m %d') +
+              datetime.timedelta(hours=int(self.vars['isthr'])))
+        self.t_start = t
+    def calc_run_end(self):
+        dt = datetime.timedelta(hours=int(self.vars['iperiod']))
+        self.t_end = self.t_start + dt
+
 
 #--------------------------------------------------
 # parser functions
@@ -127,7 +227,8 @@ def parse_reportopt(fname, block_sz=11):
 
 def get_all_tobspred_fnames(run_dir):
     """returns list of full paths to all files in the specified
-    directory matching t_obs_pred*.dat"""
+    directory matching t_obs_pred*.dat.  The results are sorted
+    lexically"""
     file_list = glob(os.path.join(run_dir,
                                   't_obs_pred*.dat'))
     file_list = sorted(file_list)
@@ -164,9 +265,10 @@ def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
     nc = Dataset(nc_fname, 'r', format='NETCDF4')
     # read timestamps to datetime.datetime
     t = np.squeeze(nc.variables['TFLAG'])
-    t_dt = np.array(([datetime.strptime(str(this[0]) +
-                                        str(this[1]).zfill(6), '%Y%j%H%M%S')
-                                        for this in t]))
+    t_dt = np.array(
+        ([datetime.datetime.strptime(str(this[0]) +
+                                     str(this[1]).zfill(6), '%Y%j%H%M%S')
+                                     for this in t]))
     # find the requested timestamps
     t_idx = (t_dt >= t0) & (t_dt <= t1)
     # retrieve the requested [OCS] data
