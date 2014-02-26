@@ -6,7 +6,7 @@ import argparse
 from glob import glob
 import pdb
 
-from STEM_parsers import parse_inputdat, parse_tobspred
+import STEM_parsers
 
 def draw_boxplots(emifac, ax=None):
     """draws boxplots showing the median, mean, and spread of STEM
@@ -61,18 +61,16 @@ if __name__ == "__main__":
                               'contain t_obs_pred*.dat and input.dat'))
     args = parser.parse_args()
 
-    fnames = glob(os.path.join(args.run_dir, 't_obs_pred*.dat'))
+    fnames = STEM_parsers.get_all_tobspred_fnames(args.run_dir)
     if fnames:
-        emifac_list = [parse_tobspred(f) for f in fnames]
+        emifac_list = [STEM_parsers.parse_tobspred(f) for f in fnames]
         emifac = [x['emi_fac']['emi_fac'].values for x in emifac_list]
         emifac = np.transpose(np.array(emifac))
-        emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
+        #emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
 
         fig, ax1 = plt.subplots(figsize=(10,6))
 
         draw_boxplots(emifac, ax=ax1)
-        ax1.set_title('"large slab" test optimization -- "weak" priors, 1.0 removed')
-
-        plt.legend(loc='best')
-
         plt.show()
+    else:
+        print "no t_obs_pred files found"
