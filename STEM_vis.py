@@ -28,9 +28,9 @@ def grid_inputdat_data(input_dat_data):
     place input.dat OCS concentrations into a 2D numpy array.
     input_dat_data is the output of STEM_parsers.parse_inputdat().
     """
-    gridded_input_dat = STEM_vis.coords_to_grid(input_dat['x'].values,
-                                                input_dat['y'].values,
-                                                input_dat['COS'].values)
+    gridded_input_dat = coords_to_grid(input_dat_data['x'].values,
+                                       input_dat_data['y'].values,
+                                       input_dat_data['COS'].values)
     return(gridded_input_dat)
 
 def grid_tobspred_data(tobspred, which_data='ocs_mod'):
@@ -110,3 +110,25 @@ def get_midday_mean_ocs_flux(nc_fname):
         [(t.hour >= 10) and (t.hour <= 15) for t in ocs_flux['t']])
     mean_flx = ocs_flux['data'][idx_midday, :, :].mean(axis=0)
     return(mean_flx)
+
+def calc_gridded_STEM_errors(top_data):
+    """
+    calculate gridded background and mismatch error from a STEM
+    t_obs_pred*.dat file.  Background error is defined as (calculated
+    emission factor minus 1.0).  Mismatch error is defined as (model
+    [OCS] minus observed [OCS]).
+
+    'top_data' abbreviates 't_obs_pred data'.
+
+    RETURNS a dict with keys 'mismatch' and 'background'; each refer
+    to a 2D numpy array of gridded errors.
+    """
+
+    gr_mod = grid_tobspred_data(top_data, 'ocs_mod')
+    gr_obs = grid_tobspred_data(top_data, 'ocs_obs')
+    gr_mismatch = gr_mod - gr_obs
+
+    gr_emi = grid_tobspred_data(top_data, 'emi_fac')
+    gr_background = gr_emi - np.ones_like(gr_emi)
+
+    return({'mismatch':gr_emi, 'background':gr_background})

@@ -12,6 +12,7 @@ import pdb
 import sys
 from datetime import datetime, timedelta
 import argparse
+import textwrap
 
 import STEM_parsers
 import STEM_vis
@@ -110,11 +111,14 @@ def initialize_plotting_objects(n_plots=8, figsize=(8.5, 11)):
 
 def summary_text_panel(ax, run_dir, input_dir, fontsize=8, note=' '):
     ax.clear()
+    note_wrapped = textwrap.fill('Note: ' + note,
+                                 80,
+                                 subsequent_indent='    ')
     txt = ('STEM run summary - produced ' +
            datetime.strftime(datetime.now(), '%d %b %Y %H:%M:%S') + '\n' +
            'run directory: ' + run_dir + '\n'
            'input directory: ' + input_dir + '\n' +
-           note + '\n')
+           note_wrapped + '\n')
     text_obj = ax.text(0.0,
                        1.0,
                        txt,

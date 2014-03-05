@@ -152,7 +152,7 @@ class NAMapFigure(object):
             # Ocean west of Mexico)
             t_lab_lon = -140
             t_lab_lat = 20
-            t_str = datetime.strftime( t_str, '%d %B %Y %H:%M' )
+            #t_str = datetime.strftime( t_str, '%d %B %Y %H:%M' )
             self.ax_map.text(*self.map( t_lab_lon, t_lab_lat ),
                              s=t_str,
                              bbox=dict(facecolor='white', alpha=0.5))
