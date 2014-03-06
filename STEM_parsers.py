@@ -270,9 +270,13 @@ def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
                                      str(this[1]).zfill(6), '%Y%j%H%M%S')
                                      for this in t]))
     # find the requested timestamps
+    if t0 is None:
+        t0 = t_dt.min()
+    if t1 is None:
+        t1 = t_dt.max()
     t_idx = (t_dt >= t0) & (t_dt <= t1)
     # retrieve the requested [OCS] data
-    data = nc.variables[varname][t_idx, 0, :, : ]
+    data = nc.variables[varname][t_idx, :, :, : ]
     return({'data':data, 't':t_dt[t_idx]})
 
 def parse_STEM_coordinates(topo_fname):

@@ -61,8 +61,8 @@ def grid_tobspred_data(tobspred, which_data='ocs_mod'):
 
 def plot_gridded_data(input_dir,
                       gridded_data,
-                      map_axis,
-                      cb_axis,
+                      map_axis=None,
+                      cb_axis=None,
                       t_str=' ',
                       cbar_t_str=' ',
                       vmin=0.0,
@@ -74,6 +74,9 @@ def plot_gridded_data(input_dir,
     essentially a wrapper for parsing latitude and longitude and
     collecting the plot labels, colormap, etc.
 
+    The default values of None for cb_axis and map_axis cause a new
+    figure, map axis, and colorbar axis to be created
+    
     RETURNS an na_map object containing the contour plot
     """
 
