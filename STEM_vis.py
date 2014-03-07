@@ -76,7 +76,7 @@ def plot_gridded_data(input_dir,
 
     The default values of None for cb_axis and map_axis cause a new
     figure, map axis, and colorbar axis to be created
-    
+
     RETURNS an na_map object containing the contour plot
     """
 
@@ -111,7 +111,7 @@ def get_midday_mean_ocs_flux(nc_fname):
                                            varname='cos')
     idx_midday = np.array(
         [(t.hour >= 10) and (t.hour <= 15) for t in ocs_flux['t']])
-    mean_flx = ocs_flux['data'][idx_midday, :, :].mean(axis=0)
+    mean_flx = ocs_flux['data'][idx_midday, 0, :, :].mean(axis=0)
     return(mean_flx)
 
 def calc_gridded_STEM_errors(top_data):

@@ -128,6 +128,18 @@ def initialize_plotting_objects(n_plots=10, figsize=(8.5, 17)):
 
     return((fig, ax_list))
 
+def draw_mw_box(namap_obj, boxcol='black'):
+    """
+    draw a box around the midwestern region where OCS fluxes were
+    enhanced for the pseudo-data
+    """
+    lat = np.array((40,44))  #deg N
+    lon = np.array((-96, -87)) #deg W
+    x, y = namap_obj.map(
+        (lon.min(), lon.min(), lon.max(), lon.max(), lon.min()),
+        (lat.min(), lat.max(), lat.max(), lat.min(), lat.min()))
+    namap_obj.map.plot(x, y, ax=namap_obj.ax_map, color=boxcol)
+
 def summary_text_panel(ax,
                        run_dir,
                        input_dir,
@@ -250,10 +262,8 @@ def create_summary(this_run,
 
     # calculate range for flux map colorbars
     flx_max = np.dstack((this_run.prior_ocs_flux.max(),
-                         this_run.true_ocs_flx.max(),
                          this_run.post_ocs_flux.max())).max()
     flx_min = np.dstack((this_run.prior_ocs_flux.min(),
-                         this_run.true_ocs_flx.min(),
                          this_run.post_ocs_flux.min())).min()
 
     print 'drawing "true" OCS fluxes'
@@ -265,8 +275,9 @@ def create_summary(this_run,
         t_str='"true" OCS flux',
         cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
         cmap = cm.get_cmap('Greens_r'),
-        vmin=None,
-        vmax=None)
+        vmin=flx_min,
+        vmax=flx_max,
+        extend='min')
 
     print 'drawing prior OCS fluxes'
     post_ocs_conc_map = STEM_vis.plot_gridded_data(
@@ -277,8 +288,8 @@ def create_summary(this_run,
         t_str='prior OCS flux',
         cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
         cmap = cm.get_cmap('Greens_r'),
-        vmin=None,
-        vmax=None)
+        vmin=flx_min,
+        vmax=flx_max)
 
     print 'drawing OCS posterior flux'
     post_ocs_flux_map = STEM_vis.plot_gridded_data(
@@ -289,8 +300,8 @@ def create_summary(this_run,
         t_str='posterior OCS flux',
         cbar_t_str=r'mol OCS m$^{-2}$ s$^{-1}$',
         cmap=cm.get_cmap('Greens_r'),
-        vmin=None,
-        vmax=None)
+        vmin=flx_min,
+        vmax=flx_max)
 
     sys.stdout.write('drawing posterior emissions factors map:')
     if this_run.top_fnames:
@@ -305,10 +316,12 @@ def create_summary(this_run,
             t_str='final emissions factors',
             ax=ax_list['emi_fac_map_final'],
             cb_axis=ax_list['emi_fac_map_final_cbar'],
-            v_rng=(0.0, None),
+            v_rng=(None, None),
             extend='max',
-            cmap=cm.get_cmap('Oranges'))
-
+            cmap=cm.get_cmap('Oranges'),
+            n_levs=5)
+        #draw_mw_box(emi_fac_map)
+        
     print 'drawing OCS prior concentration'
     post_ocs_conc_map = STEM_vis.plot_gridded_data(this_run.input_dir,
                                                    this_run.prior_ocs_conc,
