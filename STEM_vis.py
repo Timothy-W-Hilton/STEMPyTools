@@ -31,6 +31,7 @@ def grid_inputdat_data(input_dat_data):
     gridded_input_dat = coords_to_grid(input_dat_data['x'].values,
                                        input_dat_data['y'].values,
                                        input_dat_data['COS'].values)
+    gridded_input_dat = gridded_input_dat.transpose()
     return(gridded_input_dat)
 
 def grid_tobspred_data(tobspred, which_data='ocs_mod'):
@@ -57,6 +58,7 @@ def grid_tobspred_data(tobspred, which_data='ocs_mod'):
     gridded_tobspred = coords_to_grid(tobspred['emi_fac']['x'].values,
                                       tobspred['emi_fac']['y'].values,
                                       data)
+    gridded_tobspred = gridded_tobspred.transpose()
     return(gridded_tobspred)
 
 def plot_gridded_data(input_dir,
@@ -68,7 +70,8 @@ def plot_gridded_data(input_dir,
                       vmin=0.0,
                       vmax=0.8,
                       extend='neither',
-                      cmap=cm.get_cmap('Blues')):
+                      cmap=cm.get_cmap('Blues'),
+                      n_levs=20):
     """
     produce a contour plot on a map for gridded STEM data.  This is
     essentially a wrapper for parsing latitude and longitude and
@@ -94,7 +97,8 @@ def plot_gridded_data(input_dir,
                                  extend=extend,
                                  cbar_t_str=cbar_t_str,
                                  colorbar_args={'format': '%0.2g'},
-                                 cmap=cmap)
+                                 cmap=cmap,
+                                 n_levs=n_levs)
     return(map_obj)
 
 def get_midday_mean_ocs_flux(nc_fname):

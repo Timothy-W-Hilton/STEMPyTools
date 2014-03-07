@@ -128,18 +128,6 @@ def initialize_plotting_objects(n_plots=10, figsize=(8.5, 17)):
 
     return((fig, ax_list))
 
-def draw_mw_box(namap_obj, boxcol='black'):
-    """
-    draw a box around the midwestern region where OCS fluxes were
-    enhanced for the pseudo-data
-    """
-    lat = np.array((40,44))  #deg N
-    lon = np.array((-96, -87)) #deg W
-    x, y = namap_obj.map(
-        (lon.min(), lon.min(), lon.max(), lon.max(), lon.min()),
-        (lat.min(), lat.max(), lat.max(), lat.min(), lat.min()))
-    namap_obj.map.plot(x, y, ax=namap_obj.ax_map, color=boxcol)
-
 def summary_text_panel(ax,
                        run_dir,
                        input_dir,
@@ -291,7 +279,7 @@ def create_summary(this_run,
         vmin=flx_min,
         vmax=flx_max)
 
-    print 'drawing OCS posterior flux'
+    print 'drawing posterior OCS fluxes'
     post_ocs_flux_map = STEM_vis.plot_gridded_data(
         this_run.input_dir,
         this_run.post_ocs_flux,
@@ -308,26 +296,23 @@ def create_summary(this_run,
         sys.stdout.write(os.path.basename(this_run.top_fnames[-1]) + '\n')
         sys.stdout.flush()
         n_iter = len(this_run.top_fnames)
-        emi_fac_map = plot_tobspred_emifac.draw_plot(
-            this_run.run_dir,
+        emi_fac_map = STEM_vis.plot_gridded_data(
             this_run.input_dir,
-            this_run.top_fnames[-1],
-            n_iter,
-            t_str='final emissions factors',
-            ax=ax_list['emi_fac_map_final'],
+            this_run.final_emifac,
+            map_axis=ax_list['emi_fac_map_final'],
             cb_axis=ax_list['emi_fac_map_final_cbar'],
-            v_rng=(None, None),
-            extend='max',
+            vmin=None,
+            vmax=None,
+            t_str='final emissions factors',
             cmap=cm.get_cmap('Oranges'),
             n_levs=5)
-        #draw_mw_box(emi_fac_map)
-        
-    print 'drawing OCS prior concentration'
+
+    print 'drawing OCS observed concentration'
     post_ocs_conc_map = STEM_vis.plot_gridded_data(this_run.input_dir,
                                                    this_run.prior_ocs_conc,
                                                    ax_list['prior_conc_map'],
                                                    ax_list['prior_conc_cbar'],
-                                                   t_str='prior [OCS]',
+                                                   t_str='observed [OCS] (hour 168)',
                                                    cbar_t_str='OCS [ppbv]')
 
     print 'drawing OCS posterior concentration'
@@ -350,7 +335,8 @@ def create_summary(this_run,
         cbar_t_str=r'$\Delta$ [OCS] (ppbv)',
         vmin=d_conc.min(),
         vmax=d_conc.max(),
-        cmap=cm.get_cmap('Oranges'))
+        cmap=cm.get_cmap('Blues'),
+        n_levs=20)
 
     print 'saving the summary to ' + outfile
     fig.savefig(outfile)

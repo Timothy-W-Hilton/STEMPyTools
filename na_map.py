@@ -156,6 +156,8 @@ class NAMapFigure(object):
             self.ax_map.text(*self.map( t_lab_lon, t_lab_lat ),
                              s=t_str,
                              bbox=dict(facecolor='white', alpha=0.5))
+
+        #self.draw_mw_box()
         return(cs)
 
     def add_scatter_plot(self, lons, lats):
@@ -163,3 +165,15 @@ class NAMapFigure(object):
         self.map.scatter(lons, lats, latlon=True)
 
         return(None)
+
+    def draw_mw_box(self, boxcol='black'):
+        """
+        draw a box around the midwestern region where OCS fluxes were
+        enhanced for the pseudo-data
+        """
+        lat = np.array((40,44))  #deg N
+        lon = np.array((-96, -87)) #deg W
+        x, y = self.map(
+            (lon.min(), lon.min(), lon.max(), lon.max(), lon.min()),
+            (lat.min(), lat.max(), lat.max(), lat.min(), lat.min()))
+        self.map.plot(x, y, ax=self.ax_map, color=boxcol)
