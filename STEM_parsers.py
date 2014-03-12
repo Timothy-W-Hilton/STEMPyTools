@@ -250,18 +250,20 @@ def parse_all_emifac(run_dir, mask_ones=True):
             emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
     return(emifac)
 
-def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
-    """ Parse a STEM variable from a STEM I/O API netcdf file.
-    varname (type str) must be a variable in the netcdf file. The file
-    must also contain a variable TFLAG containing timestamps in the
-    format <YYYYDDD,HHMMSS>.  If specified, t0 and t1
-    (datetime.datetime) restrict the returned data to timestamps that
-    satisfy t0 <= timestamp <= t1.  If t0 and t1 are not specified
-    then all timestamps are returned.
+def parse_STEM_tflag(nc_fname, out_format='datetime'):
+    """
+    parse the TFLAG variable of a STEM IO/API file to
+    datetime.datetime values.  TFLAG is the time variable in STEM
+    input and output files.  It's format is a text string:
+    YYYYDDD,HHMMSS.  The specified file must contain the variable
+    TFLAG.
 
-    RETURNS a dict with keys 'data' and 't'.  'data' contains the
-    values in varname (np.ndarray) and 't' contains the timestamps
-    (datenum.datenum objects)."""
+    PARAMETERS
+    ----------
+    nc_fname: string; the full path to the IO/API file.
+    out_format: {datetime}|hour: format to return time.
+    """
+    SECONDS_PER_HOUR = 60*60
     nc = Dataset(nc_fname, 'r', format='NETCDF4')
     # read timestamps to datetime.datetime
     t = np.squeeze(nc.variables['TFLAG'])
@@ -269,14 +271,63 @@ def parse_STEM_var(nc_fname=None, t0=None, t1=None, varname=None):
         ([datetime.datetime.strptime(str(this[0]) +
                                      str(this[1]).zfill(6), '%Y%j%H%M%S')
                                      for this in t]))
-    # find the requested timestamps
-    if t0 is None:
-        t0 = t_dt.min()
-    if t1 is None:
-        t1 = t_dt.max()
-    t_idx = (t_dt >= t0) & (t_dt <= t1)
+    nc.close()
+
+    if out_format is 'hour':
+        # conver the datetime objects to hours past the first timestamp.
+        t0 = t_dt[0]
+        # t_dt has dtype 'O'; numpy refuses to convert these to floats
+        # after hour calculation, so initialize a new array of dtype
+        # float to hold hours.
+        t_hr = np.empty_like(t_dt, dtype=float)
+        for i in range(t_dt.size):
+            td = t_dt[i] - t0
+            t_hr[i] = td.total_seconds() / SECONDS_PER_HOUR
+        t_dt = t_hr
+    return(t_dt)
+
+def parse_STEM_var(nc_fname=None,
+                   t_idx=None,
+                   z_idx=None,
+                   t0=None,
+                   t1=None,
+                   varname=None):
+    """ Parse a STEM variable from a STEM I/O API netcdf file.
+    varname (type str) must be a variable in the netcdf file. The file
+    must also contain a variable TFLAG containing timestamps in the
+    format <YYYYDDD,HHMMSS>.
+
+    There are two ways so specify the time slices to extract:
+    (1) specify t_idx: array-like indices directly into the time
+    dimension of the IO/API file.  If t_idx is specified t1 and t0 are
+    ignored.
+    (2) specify, t0 and/or t1: (datetime.datetime) restrict the
+    returned data to timestamps that satisfy t0 <= timestamp <= t1.
+    If none of t_idx, t0,and t1 are not specified then all timestamps
+    are returned.  If t_idx is specified t1 and t0 are ignored.
+
+    z_idx specifies the vertical layers to extract.  Must be None (all
+    vertical layers) , a scalaer integer, or a tuple.
+
+    RETURNS a dict with keys 'data' and 't'.  'data' contains the
+    values in varname (np.ndarray) and 't' contains the timestamps
+    (datenum.datenum objects)."""
+    nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    t_dt = parse_STEM_tflag(nc_fname)
+    if t_idx is None:
+        # find the requested timestamps
+        if t0 is None:
+            t0 = t_dt.min()
+        if t1 is None:
+            t1 = t_dt.max()
+        t_idx = (t_dt >= t0) & (t_dt <= t1)
+    if z_idx is None:
+        z_idx = np.arange(nc.variables[varname].shape[1])
+    elif type(z_idx) is not tuple:
+        z_idx = (z_idx,)
     # retrieve the requested [OCS] data
-    data = nc.variables[varname][t_idx, :, :, : ]
+    data = nc.variables[varname][t_idx, z_idx, :, : ]
+    nc.close()
     return({'data':data, 't':t_dt[t_idx]})
 
 def parse_STEM_coordinates(topo_fname):
