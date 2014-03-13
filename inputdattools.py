@@ -169,6 +169,8 @@ class STEMInputDat(object):
 
 #     import pdb; pdb.set_trace()
 #     # parse the observations from the IO/API file
+#     # netCDF4 currentlydoes not allow multi-dimensional indexing:
+#     #     https://code.google.com/p/netcdf4-python/issues/detail?id=106
 #     aq = STEM_parsers.parse_STEM_var(aq_fname,
 #                                      t_idx=tuple(t_idx),
 #                                      z_idx=tuple(z_idx),

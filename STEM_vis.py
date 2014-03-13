@@ -31,7 +31,7 @@ def grid_inputdat_data(input_dat_data):
     gridded_input_dat = coords_to_grid(input_dat_data['x'].values,
                                        input_dat_data['y'].values,
                                        input_dat_data['COS'].values)
-    gridded_input_dat = gridded_input_dat.transpose()
+    gridded_input_dat = gridded_input_dat#.transpose()
     return(gridded_input_dat)
 
 def grid_tobspred_data(tobspred, which_data='ocs_mod'):
@@ -58,7 +58,7 @@ def grid_tobspred_data(tobspred, which_data='ocs_mod'):
     gridded_tobspred = coords_to_grid(tobspred['emi_fac']['x'].values,
                                       tobspred['emi_fac']['y'].values,
                                       data)
-    gridded_tobspred = gridded_tobspred.transpose()
+    gridded_tobspred = gridded_tobspred#.transpose()
     return(gridded_tobspred)
 
 def plot_gridded_data(input_dir,

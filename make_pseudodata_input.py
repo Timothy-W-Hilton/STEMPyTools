@@ -22,7 +22,7 @@ nx = 124
 ny = 124
 nz = 22
 # put pseudo-observations at STEM grid z = 7 (roughly 1000 m)
-obs_z = 7
+obs_z = 6
 #take ten pseudo-observations, evenly spaced from hour 10 to hour 500
 #of the three-week (504-hour) forward run.
 obs_t = np.int_(np.linspace(10, 500, num=10).round())
@@ -36,7 +36,7 @@ wUSA_aq = os.path.join(os.getenv('STEM'),
                        'run.TWH_fwd_large_slab',
                        'output_wUSAx100',
                        'AQOUT-124x124-22levs-casa-cos_2008_2009.nc')
-mwUSA_aq = wUSA_aq = os.path.join(os.getenv('STEM'),
+mwUSA_aq = os.path.join(os.getenv('STEM'),
                        'run.TWH_fwd_large_slab',
                        'output_mwUSAx1.5',
                        'AQOUT-124x124-22levs-casa-cos_2008_2009.nc')
@@ -44,13 +44,17 @@ mwUSA_aq = wUSA_aq = os.path.join(os.getenv('STEM'),
 print 'parsing western USA x 100 AQOUT'
 wUSA_id = idt.STEMInputDat.cos_from_aqout(wUSA_aq, m)
 print 'writing western USA x 100 AQOUT input.dat'
-wUSA_id.write_file(fname='wUSAx100_10timesteps.input.dat',
-                   fdir=os.path.join(os.getenv('HOME'),
-                                     'Data', 'STEM', 'input'))
+wUSA_id.write_file(
+    fname='input.dat',
+    fdir=os.path.join(
+        os.getenv('STEM'),
+        'run.TWH_opt_LargeSlab_StrongPrior_wUSA100xCASA_10tsteps'))
 
 print 'parsing midwestern USA x 1.5 AQOUT'
 mwUSA_id = idt.STEMInputDat.cos_from_aqout(mwUSA_aq, m)
 print 'writing midwestern USA x 1.5 input.dat'
-mwUSA_id.write_file(fname='mwUSAx1.5_10timesteps.input.dat',
-                   fdir=os.path.join(os.getenv('HOME'),
-                                     'Data', 'STEM', 'input'))
+mwUSA_id.write_file(
+    fname='input.dat',
+    fdir=os.path.join(
+        os.getenv('STEM'),
+        'run.TWH_opt_LargeSlab_StrongPrior_mwUSA1.5xCASA_10tsteps'))
