@@ -155,10 +155,21 @@ def parse_inputdat(fname):
                             names=('t', 'x', 'y', 'z', 'COS'))
     return(input_dat)
 
-def parse_tobspred(fname):
+def parse_tobspred(fname, inputdat_fname=None, emi_fac_l_no=None):
     """ parse model and observed OCS concentrations and emissions
     scaling factors ('emi_fac') from a STEM t_obs_pred.dat file
     specified by fname to a two pandas data frames.
+    PARAMETERS
+    ----------
+    fname; string: full path to the t_obs_pred.dat file to be read
+    inputdat_fname; string, optional: full path to the input.dat file
+       that drove the generation o f the t_obs_pred.dat file.  If
+       specified the input.dat file is parsed to determine how many
+       lines of concentrations there are in the t_obs_pred.dat file.
+    emi_fac_l_no: integer, optional: The line number of the first line
+       in t_obs_pred.dat that contains emissions scaling factors.
+       Ignored if inputdat_fname is specified.  Must be specified if
+       inputdat_fname is not specified.
 
     RETURNS: a dict with two entries: ocs_conc and emi_fac.  Each
     entry contains a pandas data frame.  ocs_conc contains time stamps
@@ -166,24 +177,36 @@ def parse_tobspred(fname):
     concentrations (mod).  emi_fac contains STEM grid X coordinate
     (x), STEM grid Y coordinate (y), and the emissions scaling factor
     (emi_fac).
-    """
 
-    nlines = file_len(fname)
-    if (nlines % 2) != 0:
-        raise "t_obs_pred.dat must have even number of lines!"
+    Note: The input.dat file is used to identify the line in the
+    t_obs_pred.dat file where the data change from concentrations to
+    emissions scaling factors.  The only way I could think of to do
+    this completely from the information within the t_obs_pred.dat
+    file is to identify the first line where the first number is an
+    integer, rather than a floating point number in exponential
+    notation.  This approach would be vulnerable to a change in output
+    format within STEM, though; therefore I decided to go with using
+    input.dat.
+    """
+    if inputdat_fname is not None:
+        n_hdr_lines = 4;
+        emi_fac_l_no = file_len(inputdat_fname) - n_hdr_lines
+    elif emi_fac_l_no is None:
+        raise TypeError('Neither inputdat_fname nor'
+                        'emi_fac_l_no were specified')
 
     ocs_conc = pd.read_csv(fname,
                            sep='[\s]*',
                            header=None,
                            skipinitialspace=False,
-                           nrows=int(nlines / 2),
+                           nrows=emi_fac_l_no,
                            names=('t', 'obs', 'mod'))
 
     emi_fac = pd.read_csv(fname,
                           sep='[\s]*',
                           header=None,
                           skipinitialspace=False,
-                          skiprows=int(nlines / 2),
+                          skiprows=emi_fac_l_no,
                           names=('x', 'y', 'emi_fac'))
     return({"ocs_conc" : ocs_conc,
             "emi_fac" : emi_fac})
