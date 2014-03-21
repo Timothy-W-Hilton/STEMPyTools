@@ -14,6 +14,7 @@ import os, os.path
 import numpy as np
 import numpy.ma as ma
 import netCDF4
+import pandas as pd
 
 import STEM_parsers
 
@@ -26,6 +27,7 @@ class STEMInputDat(object):
     """
     def __init__(self,
                  hr=None,
+                 t=None,
                  x=None,
                  y=None,
                  z=None,
@@ -39,6 +41,7 @@ class STEMInputDat(object):
         PARAMETERS
         ----------
         x, y, z: N-element np.ndarray:  x, y, z indices of the observations
+        t:  N-element np.ndarray; STEM timestep of the observations
         hr: N-element np.ndarray; hour of model run corresponding to
             observations
         obs: N by n_total_spc np.ndarray; columns species concentrations
@@ -52,6 +55,7 @@ class STEMInputDat(object):
         self.hdr_note = hdr_note
         self.uncrt = uncrt
         self.spc_idx = spc_idx
+        self.t = t
         self.hr = hr
         self.x = x
         self.y = y
@@ -65,6 +69,37 @@ class STEMInputDat(object):
         #            to write input.dat based on header info and a data frame
         # if ndarray: (1) make it a masked array where the mask is everywhere false
         #             (2) proceed as above
+
+    @classmethod
+    def cos_from_inputdat(cls, inputdat_fname):
+        """
+        parse an input.dat file to a STEMInputDat object
+        """
+
+        f = open(inputdat_fname, 'r')
+        n_obs, n_total_spc = [int(i) for i in f.readline().strip().split()]
+        hdr_note = f.readline().strip()
+        uncrt, spc_idx = f.readline().strip().split()
+        uncrt = float(uncrt)
+        spc_idx = int(spc_idx)
+        f.close()
+
+        input_dat = pd.read_csv(inputdat_fname,
+                                sep=None,
+                                header=None,
+                                skiprows=4,
+                                names=('t', 'x', 'y', 'z', 'COS'))
+
+        obj = cls(t=input_dat['t'].get_values(),
+                  x=input_dat['x'].get_values(),
+                  y=input_dat['y'].get_values(),
+                  z=input_dat['z'].get_values(),
+                  obs=input_dat['COS'].get_values(),
+                  n_total_spc=n_total_spc,
+                  hdr_note=hdr_note,
+                  uncrt=uncrt,
+                  spc_idx=spc_idx)
+        return(obj)
 
     @classmethod
     def cos_from_aqout(cls,
