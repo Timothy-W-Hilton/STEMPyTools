@@ -1,3 +1,23 @@
+"""
+noaa_ocs
+========
+
+Module containing tools to parse, process, and visualize NOAA airborne
+atmospheric species concentration observations.
+
+Contains the class NOAA_OCS, which implements most of the
+functionality, and the following functions:
+
+get_STEMZ_height_ASL: calculate STEM Z levels from WRF heights and
+STEM grid topography.
+
+find_nearest_stem_xy: find the STEM grid cell nearest to a specified
+latitude and longitude.
+
+lon_lat_to_cartesian: calculate cartesian X, Y, Z coordinates from
+spherical coordinates.
+"""
+
 from scipy.io import netcdf
 import re
 import math, os
@@ -17,6 +37,7 @@ import STEM_parsers
 class NOAA_OCS(object):
     """
     Container class to work with NOAA airborne observations
+    
     Class attributes:
        obs: pandas DataFrame containing NOAA observations
        obs_color: matplotlib color to use for plotting observations.  
@@ -25,10 +46,22 @@ class NOAA_OCS(object):
     def __init__(self,
                  obs=None):
         """
-        Class constructor.
+        Class constructor; builds object from an existing Pandas
+        DataFrame of observations.
+
+        May be called directly with an existing DataFrame, but
+        typically it will be most useful to use the class method
+        parse_file to create a NOAA_OCS object from a NOAA airborne
+        obseration CSV file.
+        
         PARAMETERS
         ----------
         obs: Pandas DataFrame containing NOAA airborne observations.
+            There are no limit on the number of observations or the
+            number of variables, but the following variables are
+            required: sample_longitude, sample_latitude, sample_year,
+            sample_month, sample_day, sample_hour, sample_minute,
+            sample_seconds.
         """
         self.obs = obs
         self.obs_color = brewer_qualitative.Dark2['max'].mpl_colors[0]
@@ -37,12 +70,25 @@ class NOAA_OCS(object):
     @classmethod
     def parse_file(cls, fname):
         """
-        parses a NOAA airborne measurement text file.
+        Construct a NOAA_OCS object from a data file.
+
+        Parse a NOAA airborne measurement whitespace-delimited ASCII
+        file and create a NOAA_OCS object containing the observations
+        in its obs field. The last comment line in the file header
+        should contain the column names in the format "data_fields:
+        NAME_1 NAME_2 NAME_3 ... NAME_N".  There are no restrictions
+        on the number of variables in the file, but the following
+        variables are required: sample_longitude, sample_latitude,
+        sample_year, sample_month, sample_day, sample_hour,
+        sample_minute, sample_seconds.  The timestamp is converted to
+        a datetime.datetime object and placed in the obs DataFrame as
+        obs.datet.
         PARAMETERS
         ----------
         fname: full path the NOAA file to be parsed
 
         returns: object of class noaa_ocs.NOAA_OCS.
+        
         """
 
         # the NOAA files contain varying number of header lines.  It
@@ -77,7 +123,13 @@ class NOAA_OCS(object):
 
     def get_stem_xy(self, stem_lon, stem_lat):
         """
-        Get STEM grid (x, y) values for the object's observations.
+        Get STEM grid (x, y) values for observations.
+
+        Uses a nearest neighbor search to find the STEM grid cell
+        center nearest the observation location.  Places the STEM x
+        and y grid indices in the variables obs.x_stem and obs.y_stem,
+        respectively.  Places the STEM longitude and latitude in
+        variables obs.lon_stem and obs.lat_stem, respectively.
         PARAMETERS
         ----------
         stem_lon: longitudes of STEM grid cell centers
@@ -95,15 +147,18 @@ class NOAA_OCS(object):
                    topo_fname='./TOPO-124x124.nc',
                    wrfheight_fname='./wrfheight-124x124-22levs.nc'):
         """
-        determine the STEM z level of NOAA airborne observations using
-        each observation's STEM grid x, STEM grid y, and altitude above
-        sea level, and STEM grid sigma levels.
+        Get STEM grid z values for observations.
+
+        Determine the STEM z level of NOAA airborne observations using
+        each observation's STEM grid x, STEM grid y, and altitude
+        above sea level, and STEM grid sigma levels.  Places the STEM
+        Z level in the variable obs.z_stem.
         PARAMETERS
         ----------
         topo_fname: full path the to the IO/API file defining the
            latitude, longitude, and topopgraphy of the STEM grid
-        wrfheight_fname: full path the to the IO/API file defining the
-           WRF heights on the STEM grid.
+        wrfheight_fname: full path the to the IO/API file specifying
+           the WRF heights on the STEM grid.
         """
         asl = get_STEMZ_height_ASL(topo_fname, wrfheight_fname)
         n_obs = self.obs.shape[0]
@@ -120,9 +175,11 @@ class NOAA_OCS(object):
 
     def get_stem_t(self, stem_t0):
         """
-        Calculates the stem timestep in hours from STEM starting time
-        for each observation and places them in field 'stemt' in the
-        DataFrame of observations.
+        get STEM timestep for airborne observations.
+
+        Calculate the stem timestep (in hours from STEM start time)
+        for each observation.  The STEM timestep is placed in the obs
+        DataFrame variable stemt.
         PARAMETERS
         ----------
         stem_t0: datetime.datetime; the first timestep of the stem
@@ -134,9 +191,11 @@ class NOAA_OCS(object):
 
     def plot_stem_obs_matches(self):
         """
-        plot observations (^) and nearest STEM grid cells (o) on a
-        map, with a line connecting each observation to its assigned
-        grid cell
+        Plot observations and their assigned grid cells on a map.
+
+        Plot observations (^) and nearest STEM grid cells (o) on a map
+        of North America, with a line connecting each observation to
+        its assigned grid cell.
         """
         lats = np.array((self.obs.sample_latitude.values,
                          self.obs.lat_stem.values))
@@ -193,9 +252,13 @@ class NOAA_OCS(object):
 
     def plot_locations(self):
         """
-        Draw a scatter plot on a map of the location of each observation.
-        """        
-        m = init_NA_map()
+        Draw observation locations on a map.
+
+        Draw a scatter plot on a map of North America of the location
+        of each observation.
+        """
+
+        m = na_map.NAMapFigure(cb_axis=None).map
         mrks = m.scatter(
             self.obs.sample_longitude.values,
             self.obs.sample_latitude.values,
@@ -204,31 +267,29 @@ class NOAA_OCS(object):
             latlon=True)
         return(m, mrks)
 
-def init_NA_map():
-    m = na_map.NAMapFigure(cb_axis=None).map
-    return(m)
-    
-def init_NA_map_cyl():
-    """
-    Draw a map of North America using a cylindrical projection.
-    """
-    plt.figure(figsize=(8,8))
-    #initialize a map of North America
-    SW_crnr = (-170, 10) # lon, lat for SW corner of map
-    NE_crnr = (-50, 80) # lon, lat for NE corner of map
-    m = basemap.Basemap(llcrnrlon=SW_crnr[0], llcrnrlat=SW_crnr[1],
-                        urcrnrlon=NE_crnr[0], urcrnrlat=NE_crnr[1])
-    m.drawmeridians(np.linspace(SW_crnr[0], NE_crnr[0], num=3),
-                    labels=[1,0,0,0])
-    m.drawparallels(np.linspace(SW_crnr[1], NE_crnr[1], num=3),
-                    labels=[0,0,0,1])
-    m.drawcoastlines()
-    return(m)
+# def init_NA_map_cyl():
+#     """
+#     Draw a map of North America using a cylindrical projection.
+#     """
+#     plt.figure(figsize=(8,8))
+#     #initialize a map of North America
+#     SW_crnr = (-170, 10) # lon, lat for SW corner of map
+#     NE_crnr = (-50, 80) # lon, lat for NE corner of map
+#     m = basemap.Basemap(llcrnrlon=SW_crnr[0], llcrnrlat=SW_crnr[1],
+#                         urcrnrlon=NE_crnr[0], urcrnrlat=NE_crnr[1])
+#     m.drawmeridians(np.linspace(SW_crnr[0], NE_crnr[0], num=3),
+#                     labels=[1,0,0,0])
+#     m.drawparallels(np.linspace(SW_crnr[1], NE_crnr[1], num=3),
+#                     labels=[0,0,0,1])
+#     m.drawcoastlines()
+#     return(m)
 
 def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
                          wrfheight_fname='./wrfheight-124x124-22levs.nc'):
     """
-    Reads the wrf height and topo files to get the STEM vertical cell
+    Get STEM Z level boundaries in meters above sea level.
+
+    Read the wrf height and topo files to get the STEM vertical cell
     boundaries in meters above sea level.  How model levels should be
     interpreted is described in (1) and (2):
     (1) http://www.ecmwf.int/research/ifsdocs/DYNAMICS/Chap2_Discretization4.html#961180
@@ -254,7 +315,11 @@ def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
     return(asl)
 
 def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
-    """given a set of arbitrary (lon, lat) positions, find the horizontal
+    """
+    find nearest neighbors for a set of lon, lat points from a second
+    set of lon, lat points.
+
+    Given a set of arbitrary (lon, lat) positions, find the horizontal
     (x, y) STEM grid indices of the nearest STEM grid cell center to
     each position.
     PARAMETERS
@@ -263,6 +328,9 @@ def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
        contain the same number of elements.
     lon_stem, lat_stem: ndarrays; longitudes and latitudes of STEM
        grid cell centers. Must contain the same number of elements.
+
+    RETURNS:
+    a 2-element tuple of X and Y indices, one index per observation.
     """
     # convert spherical lon, lat coordinates to cartesian coords. Note
     # that these x,y,z are 3-dimensional cartesian coordinates of
@@ -284,14 +352,28 @@ def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
                    z.values)).squeeze(), k = 1)
 
     return(np.unravel_index(inds, lon_stem.shape))
-    
+
 def lon_lat_to_cartesian(lon, lat, R = 1):
-    """calculates three dimensional cartesian coordinates (x, y, z) for
+    """
+    Convert spherical coordinates to three-dimensional Cartesian
+    coordinates.
+
+    calculates three dimensional cartesian coordinates (x, y, z) for
     specified longitude, latitude coordinates on a sphere with radius
     R.  Written and posted at earthpy.org by Oleksandr Huziy.
     http://earthpy.org/interpolation_between_grids_with_ckdtree.html
     accessed 19 Mar 2014 by Timothy W. Hilton.
 
+    PARAMETERS
+    ==========
+    lon; np.ndarray: longitude values
+    lat; np.ndarray: latitude values
+    R: scalar; radius of the sphere.
+
+    RETURNS
+    =======
+    three element tuple containing X, Y, and Z, one element per
+    lon,lat pair.
     """
     lon_r = np.radians(lon)
     lat_r = np.radians(lat)
