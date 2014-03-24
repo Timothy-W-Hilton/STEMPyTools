@@ -21,8 +21,8 @@ def draw_plot(run_dir,
               ax=None,
               t_str=None,
               cb_axis=True,
-              v_rng=(0.0, 10.0),
-              cmap=cm.get_cmap('Blues'),
+              v_rng=(None, None),
+              cmap=cm.get_cmap('Oranges'),
               extend='neither',
               n_levs=20):
     #parse input.dat
@@ -31,14 +31,15 @@ def draw_plot(run_dir,
     #parse t_obs_pred.dat emissions factors
     tobspred_fname = os.path.join( run_dir, fname)
     print "plotting contours for " + tobspred_fname
-    tobspred = parse_tobspred(tobspred_fname)['emi_fac']
+    tobspred = parse_tobspred(tobspred_fname,
+                              inputdat_fname=inputdat_fname)['emi_fac']
 
     # translate t_obs_pred emi_fac values into 124 x 124 grid
     [lon,lat,topo] = parse_STEM_coordinates(
         os.path.join(input_dir, 'TOPO-124x124.nc'))
     tobspred_gridded = STEM_vis.coords_to_grid(tobspred['x'].values,
                                                tobspred['y'].values,
-                                               tobspred['emi_fac'].values)
+                                               tobspred['emi_fac'].values).transpose()
 
     # map the emi_fac values
     if t_str is 'default':
@@ -141,7 +142,8 @@ if __name__ == "__main__":
                   top_fname,
                   iter=iter_num,
                   v_rng=np.array((args.vmin, args.vmax)),
-                  extend='both')
+                  extend='both',
+                  n_levs=20)
 
     print 'writing ' + args.outfile
     m.fig.savefig(args.outfile)
