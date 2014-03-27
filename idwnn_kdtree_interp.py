@@ -117,12 +117,10 @@ def cartesian_idw_kdtree_interp(xs, ys, zs, xd, yd, zd, data, n_nbr=9):
         the last 2 dimensions matching the dimensions of lon_d and
         lat_d.
     """
-    
-    tree = cKDTree(zip(xs.flatten(), ys.flatten(), zs.flatten()))
-    dists, inds = tree.query(zip(xd.flatten(),
-                                 yd.flatten(),
-                                 zd.flatten()),
-                             n_nbr)
+    # construct a K-dimensional tree of source coordinates and search
+    # it for nearest neighbors of destination coordinates
+    dists, inds = find_nn_3D_kdtree(xs, ys, zs, xd, yd, zd, n_nbr)
+
     # if n_nbr is 1, dists and inds are returned as a vector [shape is
     # (M,)], whereas for n_nbr > 1 dists and inds are returned as M by
     # n_nbr arrays [shape is (M,n_nbr)].  The np.sum axis keyword
@@ -140,6 +138,43 @@ def cartesian_idw_kdtree_interp(xs, ys, zs, xd, yd, zd, data, n_nbr=9):
     outshape = data.shape[:-2] + xd.shape[-2:]
     data_idw = np.resize(data_idw, outshape)
     return(data_idw)
+
+def find_nn_3D_kdtree(xs, ys, zs, xd, yd, zd, n_nbr):
+    """
+    Find the n_nbr nearest neighbors to one set of coordinates from
+    within a second set of coordinates.
+
+    A K-dimensional tree is constructed from a set of source coordinates
+    and searched for the n_nbr nearest neighbors to the points in the
+    destination coordinates.  All coordinates are Cartesian.
+
+    PARAMETERS
+    ==========
+    xs, ys, zs; np.ndarray in 2 dimensions: source X, Y and Z
+        coordinates, respectively. zs, ys, and zs must have identical
+        shapes.
+    xd, yd, zd; np.ndarray in 2 dimensions: destination X, Y and Z
+        coordinates, respectively. zd, yd, and zd must have identical
+        shapes.
+    data: np.ndarray: the values to be interpolated.  The last 2
+        dimensions of data must match the last 2 dimensions of xs, ys,
+        and zs.
+    n_nbr: scalar integer; number of nearest neighbors to find
+
+    RETURNS
+    dists: np.ndarray, xd.size by n_nbr; the distances from each
+       destination point to its n_nbr nearest neighbors specified by
+       inds.
+    inds: np.ndarray, xd.size by n_nbr; indices the n_nbr nearest neighbors
+       to each destination point.  The indices are flat indices.
+
+    """
+    tree = cKDTree(zip(xs.flatten(), ys.flatten(), zs.flatten()))
+    dists, inds = tree.query(zip(xd.flatten(),
+                                 yd.flatten(),
+                                 zd.flatten()),
+                             n_nbr)
+    return dists, inds
 
 def lon_lat_to_cartesian(lon, lat, R = 1):
     """
