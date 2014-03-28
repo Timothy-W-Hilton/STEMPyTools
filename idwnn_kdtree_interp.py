@@ -129,18 +129,16 @@ def cartesian_idw_kdtree_interp(xs, ys, zs, xd, yd, zd, data, n_nbr=9):
     if dists.ndim == 1:
         dists = dists[..., np.newaxis]
         inds = inds[..., np.newaxis]
+    x_inds, y_inds = np.unravel_index(inds, xs.shape)
     wgts = 1.0 / dists**2
-    data_idw = np.zeros((data.shape[0], xd.shape[-2], xd.shape[-1]))
-    print 'starting loop'
-    for i in range(data.shape[0]):
-        data_idw[i, ...] = (
-            np.sum(wgts * data[i, ...].flatten()[inds], axis=1) /
-            np.sum(wgts, axis=1)).reshape(xd.shape)
-
+    data_idw = (np.sum(wgts * data[..., x_inds, y_inds], axis=(data.ndim-1)) /
+                np.sum(wgts, axis=1))
     #the interpolated data should have the shape of the input data in
     #all but the last two dimensions, and the shape of the destination
     #coordinates in the last two
-    return(data_idw)
+    outshape = list(data.shape[:-2])
+    outshape.extend(xd.shape)
+    return(data_idw.reshape(outshape))
 
 def find_nn_3D_kdtree(xs, ys, zs, xd, yd, zd, n_nbr):
     """
@@ -179,7 +177,7 @@ def find_nn_3D_kdtree(xs, ys, zs, xd, yd, zd, n_nbr):
                              n_nbr)
     return dists, inds
 
-def lon_lat_to_cartesian(lon, lat, R = 1):
+def lon_lat_to_cartesian(lon, lat, R = 6371007.181000):
     """
     Convert spherical coordinates to Cartesian coordinates on a sphere
     with radius R.
@@ -188,14 +186,15 @@ def lon_lat_to_cartesian(lon, lat, R = 1):
     ==========
     lon, lat; np.ndarray: longitudes and latitudes of the points.  lon
        and lat must have the same shape.
-    R: scalar; the radius of the sphere
+    R: scalar; the radius of the sphere.  The default of 6371007.181
+       is Earth's radius in meters.
 
     RETURNS
     x, y, z: np.ndarray of same shape as lon, lat: The Cartesian
         coordinates of the points.
 
-    Documented by Timothy W. Hilton. Written and posted at earthpy.org
-    by Oleksandr Huziy.
+    Documented by Timothy W. Hilton. Adapted from code written and
+    posted at earthpy.org by Oleksandr Huziy.
     http://earthpy.org/interpolation_between_grids_with_ckdtree.html
     """
     lon_r = np.radians(lon)
