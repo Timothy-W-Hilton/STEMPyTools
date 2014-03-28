@@ -130,13 +130,16 @@ def cartesian_idw_kdtree_interp(xs, ys, zs, xd, yd, zd, data, n_nbr=9):
         dists = dists[..., np.newaxis]
         inds = inds[..., np.newaxis]
     wgts = 1.0 / dists**2
-    data_idw = np.sum(wgts * data.flatten()[inds], axis=1) / np.sum(wgts, axis=1)
+    data_idw = np.zeros((data.shape[0], xd.shape[-2], xd.shape[-1]))
+    print 'starting loop'
+    for i in range(data.shape[0]):
+        data_idw[i, ...] = (
+            np.sum(wgts * data[i, ...].flatten()[inds], axis=1) /
+            np.sum(wgts, axis=1)).reshape(xd.shape)
 
     #the interpolated data should have the shape of the input data in
     #all but the last two dimensions, and the shape of the destination
     #coordinates in the last two
-    outshape = data.shape[:-2] + xd.shape[-2:]
-    data_idw = np.resize(data_idw, outshape)
     return(data_idw)
 
 def find_nn_3D_kdtree(xs, ys, zs, xd, yd, zd, n_nbr):
