@@ -3,3 +3,6 @@ test*.py
 scratch*.py
 *.html
 .ipynb_checkpoints
+build/*
+dist/*
+*egg-info
