@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(
-    name = "STEM_pytools",
+    name = "STEMpytools",
     version = "0.1",
     packages = find_packages(),
 
@@ -28,7 +28,4 @@ setup(
     description = "visualization and data pre-/post-processing tools for STEM",
     license = "",
     keywords = "STEM",
-    url = "",   # project home page, if any
-
-    # could also include long_description, download_url, classifiers, etc.
-    )
+    url = "")   # project home page, if any
