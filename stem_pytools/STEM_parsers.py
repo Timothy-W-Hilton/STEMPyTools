@@ -287,7 +287,11 @@ def parse_STEM_tflag(nc_fname, out_format='datetime'):
     out_format: {datetime}|hour: format to return time.
     """
     SECONDS_PER_HOUR = 60*60
-    nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    try:
+        nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    except:
+        print('error opening {}'.format(nc_fname))
+        raise
     # read timestamps to datetime.datetime
     t = np.squeeze(nc.variables['TFLAG'])
     t_dt = np.array(
@@ -335,7 +339,11 @@ def parse_STEM_var(nc_fname=None,
     RETURNS a dict with keys 'data' and 't'.  'data' contains the
     values in varname (np.ndarray) and 't' contains the timestamps
     (datenum.datenum objects)."""
-    nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    try:
+        nc = Dataset(nc_fname, 'r', format='NETCDF4')
+    except:
+        print('error opening {}'.format(nc_fname))
+        raise
     t_dt = parse_STEM_tflag(nc_fname)
     if t_idx is None:
         # find the requested timestamps
@@ -355,10 +363,35 @@ def parse_STEM_var(nc_fname=None,
 
 def parse_STEM_coordinates(topo_fname):
     """Parse STEM grid latitude and longitude."""
-    topo = Dataset(topo_fname, 'r', format='NETCDF4')
+    try:
+        topo = Dataset(topo_fname, 'r', format='NETCDF4')
+    except:
+        print('error opening {}'.format(topo_fname))
+        raise
 
     lat = np.squeeze(topo.variables['LAT'])
     lon = np.squeeze(topo.variables['LON'])
     topo = np.squeeze(topo.variables['TOPO'])
 
     return(lon, lat, topo)
+
+def get_CO2grossflux_varname(nc_fname):
+    """
+    determine whether the CO2 gross flux variable is 'GPP' or 'GEE'.
+
+    examine variables in nc_fname and return 'GEE' if present.  If GEE
+    is not present, return 'GPP' if present.  If neither 'GEE' or
+    'GPP' are present return None.
+    """
+    try:
+        nc = Dataset(nc_fname)
+    except:
+        print('error opening {}'.format(nc_fname))
+        raise
+
+    if 'GEE' in nc.variables.keys():
+        return('GEE')
+    elif 'GPP' in nc.variables.keys():
+        return('GPP')
+    else:
+        return(None)
