@@ -13,7 +13,8 @@ R_EARTH = 6371007.181000  #Earth radius in meters
 
 class NAMapFigure(object):
     """ Class to provide a Matplotlib figure containing a map of North
-    America suitable for plotting STEM 124x124 grid output"""
+    America suitable for plotting STEM 124x124 grid output.
+    """
 
     def __init__(self,
                  t_str="STEM OCS",
@@ -24,7 +25,32 @@ class NAMapFigure(object):
                  missing_axis=None,
                  fig_sz_x=None,
                  fig_sz_y=None):
+        """
+        class constructor for NAMapFigure.
 
+        INPUT PARAMETERS:
+        col_missing: color to use for missing data
+        use_color: {True}|False: if True, plot in color.  If false, black and white.
+        map_axis: a matplotlib.axes instance.  If provided, the map is
+           drawn there.  Default is None, in which case a figure and axes are
+           created.
+        cb_axis: an axes in which to draw a colorbar (see
+           matplotlib.pyplot.colorbar).  May be one of hte following:
+              - None (default): no colorbar is drawn
+              - a matplotlib.axes instance: the colorbar is drawn here
+              - True: an axes is created next to the map axes and the
+                colorbar drawn there
+        missing_axis: an axes in which the color legend for missing data
+           is shown.  Options for specifying are the same as cb_axis.
+        fig_sz_x: the horizontal size of the map figure.  Ignored if
+           map_axis is specified.
+        fig_sz_y: the vertical size of the map figure.  Ignored if
+           map_axis is specified.
+
+        Notes:
+        If either fig_sz_x or fig_sz_y are unspecified both arguments are
+        ignored and the matplotlib default figure size is used.
+        """
         if map_axis is None:
             # no axis provided for map, so create a figure and map axis
             if (fig_sz_x is None or fig_sz_y is None):
@@ -90,7 +116,7 @@ class NAMapFigure(object):
 
         self.map.drawmapboundary(fill_color = self.col_water)
         self.map.drawcoastlines(linewidth=0.5)
-        if False:
+        if True:
             self.map.drawstates(color=self.col_states)
             self.map.drawcountries(color=self.col_states)
         # zorder very important - continent fill needs to be at the
@@ -118,9 +144,24 @@ class NAMapFigure(object):
                              cbar_t_str=None,
                              colorbar_args={}):
         """Draw filled contours of the specified OCS data over the
-        map.  Extend must be one of [ 'neither' | 'both' | 'min' |
-        'max' ], and is passed to matplotlib.pyplot.contourf via the
-        'extend' keyword."""
+        map.
+
+        INPUT PARMATERS:
+        lons: MxN numpy array of longitudes
+        lats: MxN numpy array of latitudes
+        data: MxN numpy array of data to be contoured
+        t_str: title string for the map axes
+        vmax: maximum value for color scale.  Default is data.max()
+        vmin: minimum value for color scale.  Default is data.min()
+        n_levs: number of contour levels.  Default is 20.
+        cmap: color map to use for contours.  e.g. cm.get_cmap('Blues').  See
+           http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps.
+        extend: one of [ 'neither' | 'both' | 'min' | 'max' ], and is
+           passed to matplotlib.pyplot.contourf via the 'extend' keyword.
+        cbar_t_str: title string for colorbar
+        colorbar_args: dict; additional keyword arguments to be passed
+            to matplotlib.pypolt.colorbar
+        """
 
         if vmin is None:
             vmin = data.min()
