@@ -189,7 +189,7 @@ class NOAA_OCS(object):
         wrfheight_fname: full path the to the IO/API file specifying
            the WRF heights on the STEM grid.
         """
-        asl = get_STEMZ_height_ASL(topo_fname, wrfheight_fname)
+        agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
         n_obs = self.obs.shape[0]
         self.obs['z_stem'] = np.NaN  #initialize z to NaN
         #import pdb; pdb.set_trace()
@@ -313,8 +313,8 @@ class NOAA_OCS(object):
 #     m.drawcoastlines()
 #     return(m)
 
-def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
-                         wrfheight_fname='./wrfheight-124x124-22levs.nc'):
+def get_STEMZ_height(topo_fname='./TOPO-124x124.nc',
+                     wrfheight_fname='./wrfheight-124x124-22levs.nc'):
     """
     Get STEM Z level boundaries in meters above sea level.
 
@@ -331,6 +331,11 @@ def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
        height above sea level for STEM grid cells
     wrfheight_fname: full path to the IO/API file containing z levels
        for stem grid cells
+
+    OUTPUT
+    two-element tuple of numpy ndarrays: (agl, asl).  agl contains the
+    stem cell heights above ground level, asl contains the stem cell
+    heights above sea level.
     """
 
     lon, lat, topo = STEM_parsers.parse_STEM_coordinates(topo_fname)
@@ -342,7 +347,7 @@ def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
     nc.close()
 
     asl = agl + topo #[np.newaxis, ...].shape
-    return(asl)
+    return((agl, asl))
 
 def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
     """
