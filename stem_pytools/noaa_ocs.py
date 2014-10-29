@@ -18,7 +18,7 @@ lon_lat_to_cartesian: calculate cartesian X, Y, Z coordinates from
 spherical coordinates.
 """
 
-from scipy.io import netcdf
+import netCDF4
 import re
 import math, os
 import numpy as np
@@ -335,16 +335,11 @@ def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
 
     lon, lat, topo = STEM_parsers.parse_STEM_coordinates(topo_fname)
 
-    f = netcdf.netcdf_file(wrfheight_fname, 'r')
+    nc = netCDF4.Dataset(wrfheight_fname, 'r', format='NETCDF4')
     #numpy array shape(22, 124, 124): zlev, lat, lon.  squeeze removes
     #the time dimension
-
-    ## the copy.deepcopy avoids a segfault on "asl = agl + topo" after
-    ## the python updates I installed 27 Oct 2014.  I'm not sure if
-    ## it's a problem in numpy, netCDF4, or what... 
-    import copy
-    agl = copy.copy(f.variables['AGL'][:].squeeze())
-    f.close()
+    agl = nc.variables['AGL'][:].squeeze()
+    nc.close()
 
     asl = agl + topo #[np.newaxis, ...].shape
     return(asl)
