@@ -44,7 +44,8 @@ class NOAA_OCS(object):
        grid_color: matplotlib color to use for plotting STEM grid cell points
     """
     def __init__(self,
-                 obs=None):
+                 obs=None,
+                 remove_poor_quality = True):
         """
         Class constructor; builds object from an existing Pandas
         DataFrame of observations.
@@ -66,6 +67,8 @@ class NOAA_OCS(object):
         self.obs = obs
         self.obs_color = brewer_qualitative.Dark2['max'].mpl_colors[0]
         self.grid_color = brewer_qualitative.Dark2['max'].mpl_colors[1]
+        if remove_poor_quality:
+            self = self.remove_poor_quality_obs()
 
     @classmethod
     def parse_file(cls, fname):
@@ -120,6 +123,32 @@ class NOAA_OCS(object):
             axis=1)
 
         return(cls(obs=df))
+
+    def remove_poor_quality_obs(self):
+        """
+        Remove observations with a "do not use" QC flag.  "Do not use"
+        is currently defined as any character other than '.' in the
+        first of the three QC columns.
+
+        From the NOAA OCS data readme file:
+        -----
+        NOAA ESRL uses a 3-column quality control flag where each
+        column is defined as follows:
+
+        column 1    REJECTION flag.  An alphanumeric other
+                    than a period (.) in the FIRST column indicates
+                    a sample with obvious problems during collection
+                   or analysis.  This measurement should not be interpreted.
+        -----
+
+        The second and third column are flags set for the needs of
+        specific PIs or projects.  For now, at least, the noaa_ocs
+        module ignores these.
+        """
+        quality_good = self.obs.apply(
+            lambda row: row.analysis_flag[0] == '.',
+            axis=1)
+        self.obs = self.obs[quality_good]
 
     def get_stem_xy(self, stem_lon, stem_lat):
         """
@@ -303,15 +332,21 @@ def get_STEMZ_height_ASL(topo_fname='./TOPO-124x124.nc',
     wrfheight_fname: full path to the IO/API file containing z levels
        for stem grid cells
     """
+
     lon, lat, topo = STEM_parsers.parse_STEM_coordinates(topo_fname)
 
     f = netcdf.netcdf_file(wrfheight_fname, 'r')
     #numpy array shape(22, 124, 124): zlev, lat, lon.  squeeze removes
     #the time dimension
-    agl = f.variables['AGL'][:].squeeze()  
+
+    ## the copy.deepcopy avoids a segfault on "asl = agl + topo" after
+    ## the python updates I installed 27 Oct 2014.  I'm not sure if
+    ## it's a problem in numpy, netCDF4, or what... 
+    import copy
+    agl = copy.copy(f.variables['AGL'][:].squeeze())
     f.close()
 
-    asl = agl + topo
+    asl = agl + topo #[np.newaxis, ...].shape
     return(asl)
 
 def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
