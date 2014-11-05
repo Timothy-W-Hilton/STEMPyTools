@@ -321,6 +321,50 @@ class NOAA_OCS(object):
                         facecolors='none')
         return(location_map)
 
+
+    def calculate_OCS_daily_vert_drawdown(self):
+        """
+        calculate daily mean vertical drawdown of OCS by site.  As per
+        conversation with Elliott of 30 Oct 2014 this function defines
+        drawdown as mean [OCS] 0 m to 2000 m minus mean [OCS] above 4000
+        m.
+
+        INPUTS:
+        data: noaa_ocs.NOAA_OCS object
+
+        OUTPUT
+        pandas.DataFrame containing daily OCS drawdown by site
+        """
+        altitude_bins = [0, 2000, 4000, np.inf]
+        self.obs['alt_bin'] = pd.cut(x=self.obs.sample_altitude, bins=altitude_bins)
+
+        self.obs['date'] = [t.to_datetime().date() for t in self.obs.datet]
+        agg_vars = ['date', 'sample_site_code', 'alt_bin', 'analysis_value']
+        grps = self.obs[agg_vars].groupby(['alt_bin', 'date', 'sample_site_code'])
+
+        # take the mean within each date-site-altitude combination
+        ocs_mean = grps.aggregate(np.nanmean)
+        # remove date-site-altitude combinations with no observations,
+        # index by site and date only, and sort so that all levels of a
+        # site-date combinations are consecutive
+        ocs_mean = ocs_mean.dropna().reset_index(0).sort()
+
+        # rearrange the data frame to put "low" (0 to 2000 m) observations
+        # and "hi" (> 4000 m) in consecutive columns.  Fill in missing
+        # observations with NaN.
+        lo = ocs_mean[ocs_mean.alt_bin == '(0, 2000]']
+        hi = ocs_mean[ocs_mean.alt_bin == '(4000, inf]']
+        mgd = pd.merge(lo, hi, 
+                       how='outer', 
+                       left_index=True,
+                       right_index=True,
+                       suffixes=('_lo', '_hi'))
+        #create a new data frame indexed by site & date containing OCS drawdown
+        dd_df = pd.DataFrame(mgd.analysis_value_hi - mgd.analysis_value_lo,
+                             columns=['ocs_dd'])
+
+        return(dd_df)
+
 # def init_NA_map_cyl():
 #     """
 #     Draw a map of North America using a cylindrical projection.
