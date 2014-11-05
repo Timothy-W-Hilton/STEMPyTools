@@ -419,3 +419,26 @@ def lon_lat_to_cartesian(lon, lat, R = 1):
     return x,y,z
 
 
+def get_all_NOAA_airborne_data(noaa_dir):
+    """
+    parse all NOAA airborne OCS observation files from a directory into
+    one NOAA_OCS object.  The OCS observation files are located by
+    searching for files named *ocs*.txt within the specified
+    directory.
+
+    INPUTS:
+    noaa_dir: full path to a directory containing NOAA OCS observation
+        files
+
+    OUTPUTS:
+    noaa_ocs.NOAA_OCS object containing all the parsed observations
+
+    author: Timothy W. Hilton, UC Merced <thilton@ucmerced.edu>
+    """
+    all_files = glob.glob(os.path.join(noaa_dir, '*ocs*.txt'))
+    data_list = [noaa_ocs.NOAA_OCS.parse_file(f) for f in all_files]
+    # Now combine all of the DataFrames into one large DataFrame
+    data = noaa_ocs.NOAA_OCS(
+        obs=pd.concat([this_data.obs for this_data in data_list]))
+
+    return(data)
