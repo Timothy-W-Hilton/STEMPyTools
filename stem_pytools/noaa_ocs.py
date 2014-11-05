@@ -289,6 +289,38 @@ class NOAA_OCS(object):
             latlon=True)
         return(m, mrks)
 
+    def plot_obs_site_locations(self):
+        """
+        plot a map of N America with obsertion sites labeled. The mean longitude
+        and latitude for each unique site code in the data set is
+        plotted to a map of North America.
+
+        OUTPUTS:
+        matplotlib.pyplot.figure containing the map
+        """
+
+        agg_vars = ['sample_latitude', 'sample_longitude', 'sample_site_code']
+        data_agg = self.obs[agg_vars].groupby(['sample_site_code']).aggregate(np.mean)
+
+        fig = plt.figure(figsize=(12,12))
+        ax = plt.axes()
+        location_map = na_map.NAMapFigure(t_str='NOAA airborne obs locations',
+                                          map_axis=ax)
+
+        col = brewer_qualitative.Dark2['max'].mpl_colors[0]
+        for this_site in np.unique(data_agg.index):
+            x, y = location_map.map(data_agg.loc[this_site].sample_longitude,
+                                    data_agg.loc[this_site].sample_latitude)
+            plt.text(x, y, this_site, 
+                     color=col, size=24.0,
+                     horizontalalignment='left',
+                     verticalalignment='bottom')
+            plt.scatter(x,y,marker='x', color=col)
+            plt.scatter(x,y, marker='o',
+                        edgecolors=col,
+                        facecolors='none')
+        return(location_map)
+
 # def init_NA_map_cyl():
 #     """
 #     Draw a map of North America using a cylindrical projection.
