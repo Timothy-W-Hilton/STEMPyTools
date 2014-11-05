@@ -18,17 +18,16 @@ lon_lat_to_cartesian: calculate cartesian X, Y, Z coordinates from
 spherical coordinates.
 """
 
+import os.path
 import netCDF4
 import re
-import math, os
 import numpy as np
 from datetime import datetime
 import pandas as pd
-import csv
 import matplotlib.pyplot as plt
-from mpl_toolkits import basemap
 from scipy.spatial import cKDTree
 from brewer2mpl import qualitative as brewer_qualitative
+import glob
 
 import na_map
 import STEM_parsers
@@ -245,12 +244,6 @@ class NOAA_OCS(object):
                    min(lat_max + lat_pad, 90))
 
         m = na_map.NAMapFigure(cb_axis=None).map
-        # m = basemap.Basemap(llcrnrlon=SW_crnr[0], llcrnrlat=SW_crnr[1],
-        #                     urcrnrlon=NE_crnr[0], urcrnrlat=NE_crnr[1])
-        # m.drawmeridians(np.linspace(lon_max, lon_min, num=3),
-        # 			labels=[0,0,0,1])
-        # m.drawparallels(np.linspace(lat_max, lat_min, num=3),
-        # 			labels=[1,0,0,0])
 
         obs_mrks = m.scatter(self.obs.sample_longitude.values,
                              self.obs.sample_latitude.values,
@@ -418,4 +411,28 @@ def lon_lat_to_cartesian(lon, lat, R = 1):
     z = R * np.sin(lat_r)
     return x,y,z
 
+
+def get_all_NOAA_airborne_data(noaa_dir):
+    """
+    parse all NOAA airborne OCS observation files from a directory into
+    one NOAA_OCS object.  The OCS observation files are located by
+    searching for files named *ocs*.txt within the specified
+    directory.
+
+    INPUTS:
+    noaa_dir: full path to a directory containing NOAA OCS observation
+        files
+
+    OUTPUTS:
+    noaa_ocs.NOAA_OCS object containing all the parsed observations
+
+    author: Timothy W. Hilton, UC Merced <thilton@ucmerced.edu>
+    """
+    all_files = glob.glob(os.path.join(noaa_dir, '*ocs*.txt'))
+    data_list = [NOAA_OCS.parse_file(f) for f in all_files]
+    # Now combine all of the DataFrames into one large DataFrame
+    data = NOAA_OCS(obs=pd.concat([this_data.obs for 
+                                   this_data in data_list]))
+
+    return(data)
 
