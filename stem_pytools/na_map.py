@@ -100,7 +100,7 @@ class NAMapFigure(object):
         if use_color:
             self.col_water = '#B9D3EE'  #SlateGray2
             self.col_land = '#FFF8DC'  #cornsilk
-            self.col_land = '#1C1C1C'
+            #self.col_land = '#1C1C1C'
             self.col_states = "#0A0A0A"
             self.map_grid_col = "#000000"  #color for map grid lines
         else:
