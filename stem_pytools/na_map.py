@@ -59,8 +59,14 @@ class NAMapFigure(object):
                 fig_sz = (fig_sz_x, fig_sz_y)
             self.fig = plt.figure(figsize=fig_sz)
 
-            self.ax_map = self.fig.add_axes([0.10, 0.05, 0.7 , 0.9],
-                                            frame_on=True)
+            if (cb_axis is None) and (missing_axis is None):
+                #no colorbar, so use more of the horizontal extent
+                figdim = [0.03, 0.03, 0.94 , 0.94]
+            else:
+                #save room for colorbar
+                figdim = [0.10, 0.05, 0.7 , 0.9]
+
+            self.ax_map = self.fig.add_axes(figdim, frame_on=True)
 
             self.ax_cmap = cb_axis
             if ((cb_axis is not None) and
