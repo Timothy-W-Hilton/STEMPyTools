@@ -1,11 +1,42 @@
-def calc_drawdown(aqout_conc, bcgd_cos=450):
+import numpy as np
+import numpy.ma as ma
+import os, os.path
+from noaa_ocs import get_STEMZ_height
+
+def calc_STEM_COS_drawdown(aqout_conc, 
+                           topo_fname=None, 
+                           wrfheight_fname=None,
+                           lo_height_agl=2000,
+                           hi_height_agl=4000):
     """
-    calculate cos drawdown from background COS concentration for AQOUT [COS].
+    calculate STEM COS vertical drawdown from AQOUT.  As per
+    conversation with Elliott on 30 Oct 2014, this function defines
+    vertical drawdown as (mean [COS], 0 m to 2000 m) minus (mean [COS]
+    > 4000 m).
 
     INPUTS
     aqout_conc: ndarray; AQOUT [COS], molecules m-3
     bcgd_conc: integer; background [COS], pptv.  Default is 450.
     """
     MCLS_M3_2_PPTV = 1e12
-    return(bcgd_cos - (aqout_conc * MCLS_M3_2_PPTV))
+    
+    if topo_fname is None:
+        topo_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
+                                  'TOPO-124x124.nc')
+        if wrfheight_fname is None:
+            wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
+                                           'wrfheight-124x124-22levs.nc')
+    agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
+    
+    # tile agl to same number of time stamps as aqout_conc
+    agl = np.tile(agl, (aqout_conc.shape[0], 1, 1, 1))
+
+    stem_z = 1  #second axis of AQOUT is z level
+
+    lo_cos = ma.masked_where(agl >= lo_height_agl, aqout_conc).mean(axis=stem_z)
+    hi_cos = ma.masked_where(agl <= hi_height_agl, aqout_conc).mean(axis=stem_z)
+
+    dd = (hi_cos - lo_cos) * MCLS_M3_2_PPTV
+    dd = dd[:, np.newaxis, ...]
+    return(dd)
 
