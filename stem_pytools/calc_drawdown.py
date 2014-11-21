@@ -16,19 +16,27 @@ def calc_STEM_COS_drawdown(aqout_conc,
 
     INPUTS
     aqout_conc: ndarray; AQOUT [COS], molecules m-3
-    bcgd_conc: integer; background [COS], pptv.  Default is 450.
+    topo_fname: full path to STEM topo file.  Default is
+       $SARIKA_INPUT/TOPO-124x124.nc.
+    wrfheight_fname: full path to STEM WRF height file.  Default is
+       $SARIKA_INPUT/wrfheight-124x124-22levs.nc
+    lo_height_agl: height above ground level, in meters, of the top of
+       the "surface" altitdude bin.  Default is 2000 m.
+    hi_height_agl: height above ground level, in meters, of the bottom of
+       the "high" altitdude bin.  Default is 4000 m.
     """
     MCLS_M3_2_PPTV = 1e12
     
     if topo_fname is None:
         topo_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
                                   'TOPO-124x124.nc')
-        if wrfheight_fname is None:
-            wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
-                                           'wrfheight-124x124-22levs.nc')
+    if wrfheight_fname is None:
+        wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
+                                       'wrfheight-124x124-22levs.nc')
     agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
     
-    # tile agl to same number of time stamps as aqout_conc
+    # tile agl a 3D array. Tile it out to four dimensions so it has
+    # the same number of time stamps as aqout_conc.
     agl = np.tile(agl, (aqout_conc.shape[0], 1, 1, 1))
 
     stem_z = 1  #second axis of AQOUT is z level
