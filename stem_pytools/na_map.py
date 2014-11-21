@@ -105,8 +105,8 @@ class NAMapFigure(object):
         #define some colors
         if use_color:
             self.col_water = '#B9D3EE'  #SlateGray2
-            self.col_land = '#FFF8DC'  #cornsilk
-            #self.col_land = '#1C1C1C'
+            #self.col_land = '#FFF8DC'  #cornsilk
+            self.col_land = '#BEBEBE'
             self.col_states = "#0A0A0A"
             self.map_grid_col = "#000000"  #color for map grid lines
         else:
@@ -131,10 +131,10 @@ class NAMapFigure(object):
                                 lake_color=self.col_water,
                                 zorder=0)
         self.map.drawmeridians( meridians=range(0, -180, -20),
-                                labels=(0, 0, 0, 1),  # labels on bottom
+                                labels=(0, 0, 0, 0),  # labels on bottom
                                 color=self.map_grid_col)
         self.map.drawparallels(circles=range(0, 90, 20),
-                               labels=(1, 0, 0, 0),  # labels on left
+                               labels=(0, 0, 0, 0),  # labels on left
                                color=self.map_grid_col)
 
     def add_ocs_contour_plot(self,
