@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
-import pdb
 
-R_EARTH = 6371007.181000  #Earth radius in meters
+R_EARTH = 6371007.181000  # Earth radius in meters
+
 
 class NAMapFigure(object):
     """ Class to provide a Matplotlib figure containing a map of North
@@ -24,13 +24,18 @@ class NAMapFigure(object):
                  cb_axis=None,
                  missing_axis=None,
                  fig_sz_x=None,
-                 fig_sz_y=None):
+                 fig_sz_y=None,
+                 lon_0=-105.0,
+                 lat_0=54.0,
+                 mapwidth=8.0e6,
+                 mapheight=6.5e6):
         """
         class constructor for NAMapFigure.
 
         INPUT PARAMETERS:
         col_missing: color to use for missing data
-        use_color: {True}|False: if True, plot in color.  If false, black and white.
+        use_color: {True}|False: if True, plot in color.  If false,
+           black and white.
         map_axis: a matplotlib.axes instance.  If provided, the map is
            drawn there.  Default is None, in which case a figure and axes are
            created.
@@ -46,6 +51,10 @@ class NAMapFigure(object):
            map_axis is specified.
         fig_sz_y: the vertical size of the map figure.  Ignored if
            map_axis is specified.
+        lon_0: longitude of the center of the map region
+        lat_0: latitude of the center of the map region
+        mapheight: North-South span of the map (meters, I think)
+        mapwidth: East-West span of the map (meters, I think)
 
         Notes:
         If either fig_sz_x or fig_sz_y are unspecified both arguments are
@@ -60,24 +69,16 @@ class NAMapFigure(object):
             self.fig = plt.figure(figsize=fig_sz)
 
             if (cb_axis is None) and (missing_axis is None):
-                #no colorbar, so use more of the horizontal extent
-                figdim = [0.03, 0.03, 0.94 , 0.94]
+                # no colorbar, so use more of the horizontal extent
+                figdim = [0.03, 0.03, 0.94, 0.94]
             else:
-                #save room for colorbar
-                figdim = [0.10, 0.05, 0.7 , 0.9]
+                # save room for colorbar
+                figdim = [0.10, 0.05, 0.7, 0.9]
 
             self.ax_map = self.fig.add_axes(figdim, frame_on=True)
-
             self.ax_cmap = cb_axis
-            if ((cb_axis is not None) and
-                (type(self.ax_cmap) is not mpl.axes.Axes)):
-                self.ax_cmap = self.fig.add_axes([0.85, 0.15, 0.05, 0.70],
-                                                 frame_on=True )
             self.ax_miss = missing_axis
-            if ((missing_axis is not None) and
-                (type(self.ax_miss) is not mpl.axes.Axes)):
-                self.ax_miss = self.fig.add_axes([0.81, 0.1, 0.05, 0.05],
-                                                 frame_on=False)
+
         else:
             # a map axis was provided -- draw the map there
             self.ax_map = map_axis
@@ -85,30 +86,37 @@ class NAMapFigure(object):
             self.ax_miss = missing_axis
             self.fig = self.ax_map.figure
 
+        if ((cb_axis is not None) and (type(self.ax_cmap) is not
+                                       mpl.axes.Axes)):
+            self.ax_cmap = self.fig.add_axes([0.85, 0.15, 0.05, 0.70],
+                                             frame_on=True)
+        if ((missing_axis is not None) and (type(self.ax_miss) is not
+                                            mpl.axes.Axes)):
+            self.ax_miss = self.fig.add_axes([0.81, 0.1, 0.05, 0.05],
+                                             frame_on=False)
         if t_str is not None:
             self.ax_map.set_title(t_str)
 
-
-        mapwidth = 8.0e6  # not sure of units for width/height
-        mapheight = 6.5e6
+        mapwidth = mapwidth  # not sure of units for width/height
+        mapheight = mapwidth
         self.map = Basemap(width=mapwidth,
                            height=mapheight,
                            projection='aeqd',
-                           lat_0=54,
-                           lon_0=-105,
+                           lat_0=lat_0,
+                           lon_0=lon_0,
                            resolution='l',
-                           area_thresh=1000, #show features larger than 1000 km
+                           area_thresh=1000,  # show features > 1000 km
                            rsphere=R_EARTH,
                            ax=self.ax_map,
                            fix_aspect=True)
 
-        #define some colors
+        # define some colors
         if use_color:
-            self.col_water = '#B9D3EE'  #SlateGray2
-            #self.col_land = '#FFF8DC'  #cornsilk
+            self.col_water = '#B9D3EE'  # SlateGray2
+            # self.col_land = '#FFF8DC'  # cornsilk
             self.col_land = '#BEBEBE'
             self.col_states = "#0A0A0A"
-            self.map_grid_col = "#000000"  #color for map grid lines
+            self.map_grid_col = "#000000"  # color for map grid lines
         else:
             self.col_water = "#FFFFFF"
             self.col_land = '#EEEEEE'
@@ -120,7 +128,7 @@ class NAMapFigure(object):
         else:
             self.col_missing = col_missing
 
-        self.map.drawmapboundary(fill_color = self.col_water)
+        self.map.drawmapboundary(fill_color=self.col_water)
         self.map.drawcoastlines(linewidth=0.5)
         if True:
             self.map.drawstates(color=self.col_states)
@@ -130,9 +138,9 @@ class NAMapFigure(object):
         self.map.fillcontinents(color=self.col_land,
                                 lake_color=self.col_water,
                                 zorder=0)
-        self.map.drawmeridians( meridians=range(0, -180, -20),
-                                labels=(0, 0, 0, 0),  # labels on bottom
-                                color=self.map_grid_col)
+        self.map.drawmeridians(meridians=range(0, -180, -15),
+                               labels=(0, 0, 0, 0),  # labels on bottom
+                               color=self.map_grid_col)
         self.map.drawparallels(circles=range(0, 90, 20),
                                labels=(0, 0, 0, 0),  # labels on left
                                color=self.map_grid_col)
@@ -192,19 +200,19 @@ class NAMapFigure(object):
             plt.colorbar(mappable=cs,
                          cax=self.ax_cmap,
                          **colorbar_args)
-            self.ax_cmap.set_title( cbar_t_str )
+            self.ax_cmap.set_title(cbar_t_str)
 
         if t_str is not None:
             # place a time label at (140, 20N) (out in the Pacific
             # Ocean west of Mexico)
             t_lab_lon = -140
             t_lab_lat = 20
-            #t_str = datetime.strftime( t_str, '%d %B %Y %H:%M' )
-            self.ax_map.text(*self.map( t_lab_lon, t_lab_lat ),
+            # t_str = datetime.strftime( t_str, '%d %B %Y %H:%M' )
+            self.ax_map.text(*self.map(t_lab_lon, t_lab_lat),
                              s=t_str,
                              bbox=dict(facecolor='white', alpha=0.5))
 
-        #self.draw_mw_box()
+        # self.draw_mw_box()
         return(cs)
 
     def add_scatter_plot(self, lons, lats):
@@ -218,8 +226,8 @@ class NAMapFigure(object):
         draw a box around the midwestern region where OCS fluxes were
         enhanced for the pseudo-data
         """
-        lat = np.array((40,44))  #deg N
-        lon = np.array((-96, -87)) #deg W
+        lat = np.array((40, 44))   # deg N
+        lon = np.array((-96, -87))   # deg W
         x, y = self.map(
             (lon.min(), lon.min(), lon.max(), lon.max(), lon.min()),
             (lat.min(), lat.max(), lat.max(), lat.min(), lat.min()))
