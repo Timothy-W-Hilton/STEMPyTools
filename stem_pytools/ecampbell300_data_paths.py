@@ -64,7 +64,7 @@ class paths(object):
             os.getenv('HOME'),
             'Stem_emi2_onespecies_big_ocssib',
             'STEM_Runs_C4pctLRU/',
-            'CASA-GFED_C4pctLRU', 
+            'CASA-GFED_C4pctLRU',
             'output',
             'AQOUT-124x124-22levs-CASA-GFED_fCOS_C4pctLRU.nc')
         self.fcos_casa_gfed_lru135 = os.path.join(
@@ -151,8 +151,8 @@ class paths(object):
             os.getenv('HOME'),
             'Stem_emi2_onespecies_big_ocssib',
             'STEM_Runs_C4pctLRU/',
-            'MPI_C4pctLRU', 
-            'output', 
+            'MPI_C4pctLRU',
+            'output',
             'AQOUT-124x124-22levs-MPI_fCOS_C4pctLRU.nc')
         self.fcos_MPI_C4pctLRU = os.path.join(
             self.d_MPI,
@@ -176,8 +176,8 @@ class paths(object):
             os.getenv('HOME'),
             'Stem_emi2_onespecies_big_ocssib',
             'STEM_Runs_C4pctLRU/',
-            'Can-IBIS_C4pctLRU', 
-            'output', 
+            'Can-IBIS_C4pctLRU',
+            'output',
             'AQOUT-124x124-22levs-CanIBIS_fCOS_C4pctLRU.nc')
         self.fcos_CanIBIS_C4pctLRU = os.path.join(
             self.d_CanIBIS,
@@ -185,7 +185,7 @@ class paths(object):
 
 class stemrun(object):
     """
-    container class to hold inputs and outputs for each run.  
+    container class to hold inputs and outputs for each run.
 
     CONTAINS FIELDS:
     model: string describing the GPP model used for the STEM run
@@ -299,28 +299,37 @@ def get_runs():
                                     fcos_path=p.fcos_casa_gfed_C4pctLRU,
                                     gpp_path=p.gee_casa_gfed,
                                     gppraw_path=p.gee_casa_gfed_raw,
-                                    LRU=1.35),
+                                    LRU='C3/C4'),
             'casa_m15_C4pctLRU':stemrun('CASA m15',
                                    aqout_path=p.aqout_casa_m15_C4pctLRU,
                                    fcos_path=p.fcos_casa_m15_C4pctLRU,
                                    gpp_path=p.gee_casa_m15,
                                    gppraw_path=p.gee_casa_m15_raw,
-                                   LRU=1.61),
+                                   LRU='C3/C4'),
             'kettle_C4pctLRU':stemrun('Kettle',
                                    aqout_path=p.aqout_kettle_C4pctLRU,
                                    fcos_path=p.fcos_kettle_C4pctLRU,
                                    gpp_path=p.gee_kettle,
                                    gppraw_path=p.gee_kettle_raw,
-                                   LRU=1.61),
+                                   LRU='C3/C4'),
             'MPI_C4pctLRU':stemrun('MPI',
                               aqout_path=p.aqout_MPI_C4pctLRU,
                               fcos_path=p.fcos_MPI_C4pctLRU,
                               gpp_path=p.gee_MPI,
                               gppraw_path=p.gee_MPI_raw,
-                              LRU=1.61),
+                              LRU='C3/C4'),
             'canibis_C4pctLRU':stemrun('Can-IBIS',
                               aqout_path=p.aqout_CanIBIS_C4pctLRU,
                               fcos_path=p.fcos_CanIBIS_C4pctLRU,
                               gpp_path=p.gee_CanIBIS,
                               gppraw_path=p.gee_CanIBIS_raw,
-                              LRU=1.61)})
+                              LRU='C3/C4')})
+
+def get_C3C4runs():
+    """
+    pulls the C3/C4 weighted average LRU runs from the result of
+    get_runs().  Returns a dict with the same structure as the result
+    of get_runs containing only these runs.
+    """
+    c4runs = {k: v for k, v in get_runs().items() if k.find('C4') > 0}
+    return(c4runs)
