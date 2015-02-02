@@ -273,7 +273,8 @@ def parse_all_emifac(run_dir, mask_ones=True):
             emifac = np.ma.masked_array(emifac, (np.abs(emifac) - 1.0) < 1e-10)
     return(emifac)
 
-def parse_STEM_tflag(nc_fname, out_format='datetime'):
+
+def parse_STEM_tflag(nc_fname, out_format='datetime', varname=None):
     """
     parse the TFLAG variable of a STEM IO/API file to
     datetime.datetime values.  TFLAG is the time variable in STEM
@@ -285,6 +286,9 @@ def parse_STEM_tflag(nc_fname, out_format='datetime'):
     ----------
     nc_fname: string; the full path to the IO/API file.
     out_format: {datetime}|hour: format to return time.
+    var_name: the variable name whose timestamp should be extracted.
+       If unspecified extracts the first variable's TFLAG
+       (i.e. TFLAG[..., 1, :])
     """
     SECONDS_PER_HOUR = 60*60
     try:
@@ -292,12 +296,26 @@ def parse_STEM_tflag(nc_fname, out_format='datetime'):
     except:
         print('error opening {}'.format(nc_fname))
         raise
+
+    if varname is None:
+        var_idx = 1
+    else:
+        var_idx = [varname == k for k in nc.variables.keys()]
+        if np.sum(var_idx) > 1:
+            raise ValueError(
+                'more than one variable matches {}'.format(varname))
+        if np.sum(var_idx) == 0:
+            raise KeyError(
+                '{} not present in {}'.format(varname, nc_fname))
+        else:
+            var_idx = np.where(var_idx)[0]
+
     # read timestamps to datetime.datetime
-    t = np.squeeze(nc.variables['TFLAG'])
+    t = np.squeeze(nc.variables['TFLAG'][:, var_idx, ...])
     t_dt = np.array(
         ([datetime.datetime.strptime(str(this[0]) +
                                      str(this[1]).zfill(6), '%Y%j%H%M%S')
-                                     for this in t]))
+          for this in t]))
     nc.close()
 
     if out_format is 'hour':
@@ -344,7 +362,7 @@ def parse_STEM_var(nc_fname=None,
     except:
         print('error opening {}'.format(nc_fname))
         raise
-    t_dt = parse_STEM_tflag(nc_fname)
+    t_dt = parse_STEM_tflag(nc_fname, varname=varname)
     if t_idx is None:
         # find the requested timestamps
         if t0 is None:
