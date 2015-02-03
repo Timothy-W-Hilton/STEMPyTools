@@ -308,7 +308,7 @@ def parse_STEM_tflag(nc_fname, out_format='datetime', varname=None):
             raise KeyError(
                 '{} not present in {}'.format(varname, nc_fname))
         else:
-            var_idx = np.where(var_idx)[0]
+            var_idx = np.where(var_idx)[0] - 1
 
     # read timestamps to datetime.datetime
     t = np.squeeze(nc.variables['TFLAG'][:, var_idx, ...])
@@ -375,9 +375,9 @@ def parse_STEM_var(nc_fname=None,
     elif type(z_idx) is not tuple:
         z_idx = (z_idx,)
     # retrieve the requested [OCS] data
-    data = nc.variables[varname][t_idx, z_idx, :, : ]
+    data = nc.variables[varname][t_idx, z_idx, ...]
     nc.close()
-    return({'data':data, 't':t_dt[t_idx]})
+    return({'data': data, 't': t_dt[t_idx]})
 
 def parse_STEM_coordinates(topo_fname):
     """Parse STEM grid latitude and longitude."""
