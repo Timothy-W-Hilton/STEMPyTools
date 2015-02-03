@@ -5,6 +5,7 @@ define paths to a number of files needed for LRU paper
 import os.path
 import sys
 
+
 def check_path_with_msg(this_path):
     """
     If the specified path exists on the file system, return True.
@@ -17,19 +18,20 @@ def check_path_with_msg(this_path):
     else:
         return(True)
 
+
 class paths(object):
     def __init__(self):
         self.d_proj = os.path.join('/', 'home', 'thilton',
-                                       'projects', 'COS (ecampbell3)')
+                                   'projects', 'COS (ecampbell3)')
         self.d_stemrun_root = os.path.join(
             '/home',
             'thilton',
             'Stem_emi2_onespecies_big_ocssib',
             'STEM_Runs_LRU_Paper')
 
-        #===============
+        # ===============
         # model directories
-        #===============
+        # ===============
         self.d_casa_gfed = os.path.join(self.d_proj,
                                         'CASA_GFED nacp download')
         self.d_casa_m15 = os.path.join(self.d_proj,
@@ -40,16 +42,16 @@ class paths(object):
                                   'Additional_Flux_Models',
                                   'MPI_BGC_Fluxes')
         self.d_CanIBIS = os.path.join(self.d_proj,
-                                  'Additional_Flux_Models',
-                                  'CAN-IBIS')
+                                      'Additional_Flux_Models',
+                                      'CAN-IBIS')
 
-        #===============
-        #CASA-GFED files
-        #===============
+        # ===============
+        # CASA-GFED files
+        # ===============
         self.gee_casa_gfed_raw = os.path.join(self.d_casa_gfed,
-                                          'GEE.3hrly.1x1.25.2008.nc')
-        self.gee_casa_gfed = os.path.join(self.d_casa_gfed,
-                                          'CASA-GFED_GPP_3hrly_2008_124x124.nc')
+                                              'GEE.3hrly.1x1.25.2008.nc')
+        self.gee_casa_gfed = os.path.join(
+            self.d_casa_gfed, 'CASA-GFED_GPP_3hrly_2008_124x124.nc')
         self.fcos_casa_gfed_lru161 = os.path.join(
             self.d_casa_gfed,
             'CASA-GFED_fCOS_3hrly_2008_124x124_LRU1.61.nc')
@@ -81,9 +83,23 @@ class paths(object):
         self.fcos_casa_gfed_lru187 = os.path.join(
             self.d_casa_gfed,
             'CASA-GFED_fCOS_3hrly_2008_124x124_LRU1.87.nc')
-        #===============
-        #CASA m15 files
-        #===============
+        self.aqout_casa_gfed_bnd = os.path.join(
+            os.getenv('HOME'),
+            'Stem_emi2_onespecies_big_ocssib',
+            'STEM_Runs_BoundaryConditions',
+            'CASA-GFED_PCTM_Sarika',
+            'output',
+            'AQOUT-124x124-22levs-CASA-GFED_fCOS_C4pctLRU.nc')
+        self.aqout_casa_gfed_KV = os.path.join(
+            os.getenv('HOME'),
+            'Stem_emi2_onespecies_big_ocssib',
+            'STEM_Runs_ConvectionSensitivity',
+            'CASA-GFED_doubleKVgt45',
+            'output',
+            'AQOUT-124x124-22levs-CASA-GFED_fCOS_C4pctLRU.nc')
+        # ===============
+        # CASA m15 files
+        # ===============
         self.gee_casa_m15 = os.path.join(
             self.d_casa_m15,
             'CASA-m15_GPP_3hrly_2008_124x124.nc')
@@ -106,10 +122,10 @@ class paths(object):
         self.fcos_casa_m15_C4pctLRU = os.path.join(
             self.d_casa_m15,
             'fCOS_CASAm15_2008_124x124_LRUfromC4pct.nc')
-        #===============
-        #Kettle files
-        #===============
-        self.gee_kettle=os.path.join(
+        # ===============
+        # Kettle files
+        # ===============
+        self.gee_kettle = os.path.join(
             self.d_kettle,
             'kettle_GPP_124x124.nc')
         self.gee_kettle_raw = os.path.join(
@@ -132,9 +148,9 @@ class paths(object):
         self.fcos_kettle_C4pctLRU = os.path.join(
             self.d_kettle,
             'fCOS_Kettle_2008_124x124_LRUfromC4pct.nc')
-        #===============
-        #MPI files
-        #===============
+        # ===============
+        # MPI files
+        # ===============
         self.gee_MPI = os.path.join(self.d_MPI,
                                     'MPI_GPP_124x124.nc')
         self.fcos_MPI_lru161 = os.path.join(
@@ -157,11 +173,11 @@ class paths(object):
         self.fcos_MPI_C4pctLRU = os.path.join(
             self.d_MPI,
             'fCOS_MPI_2008_124x124_LRUfromC4pct.nc')
-        #===============
-        #Can-IBIS files
-        #===============
+        # ===============
+        # Can-IBIS files
+        # ===============
         self.gee_CanIBIS = os.path.join(self.d_CanIBIS,
-                                    'CanIBIS_GPP_124x124.nc')
+                                        'CanIBIS_GPP_124x124.nc')
         self.fcos_CanIBIS_lru161 = os.path.join(
             self.d_CanIBIS,
             'CanIBIS_fcos_124x124_LRU1.61.nc')
@@ -182,6 +198,7 @@ class paths(object):
         self.fcos_CanIBIS_C4pctLRU = os.path.join(
             self.d_CanIBIS,
             'fCOS_CanIBIS_2008_124x124_LRUfromC4pct.nc')
+
 
 class stemrun(object):
     """
@@ -226,11 +243,13 @@ class stemrun(object):
         return('{model}, LRU {LRU}\n'
                '   GEE: {gpp_path}\n'
                '   fCOS: {fcos_path}\n'
-               '   AQOUT: {aqout_path}\n'.format(model=self.model,
-                                              LRU=self.LRU,
-                                              gpp_path=self.gpp_path,
-                                              fcos_path=self.fcos_path,
-                                              aqout_path=self.aqout_path))
+               '   AQOUT: {aqout_path}\n'.format(
+                   model=self.model,
+                   LRU=self.LRU,
+                   gpp_path=self.gpp_path,
+                   fcos_path=self.fcos_path,
+                   aqout_path=self.aqout_path))
+
     def all_paths_exist(self):
         """
         Checks whether object's aqout_path, fcos_path, gpp_path, and
@@ -244,6 +263,7 @@ class stemrun(object):
         all_exist = all_exist and check_path_with_msg(self.gppraw_path)
         return(all_exist)
 
+
 def get_runs():
     """
     the main user-level function.  returns a dict of stemrun objects,
@@ -251,79 +271,92 @@ def get_runs():
     outputs from a STEM run.
     """
     p = paths()
-    return({'casa_gfed_161':stemrun('CASA-GFED',
-                                    aqout_path=p.aqout_casa_gfed_lru161,
-                                    fcos_path=p.fcos_casa_gfed_lru161,
-                                    gpp_path=p.gee_casa_gfed,
-                                    gppraw_path=p.gee_casa_gfed_raw,
+    return({'casa_gfed_161': stemrun('CASA-GFED',
+                                     aqout_path=p.aqout_casa_gfed_lru161,
+                                     fcos_path=p.fcos_casa_gfed_lru161,
+                                     gpp_path=p.gee_casa_gfed,
+                                     gppraw_path=p.gee_casa_gfed_raw,
+                                     LRU=1.61),
+            'casa_gfed_187': stemrun('CASA-GFED',
+                                     aqout_path=p.aqout_casa_gfed_lru187,
+                                     fcos_path=p.fcos_casa_gfed_lru187,
+                                     gpp_path=p.gee_casa_gfed,
+                                     gppraw_path=p.gee_casa_gfed_raw,
+                                     LRU=1.87),
+            'casa_gfed_135': stemrun('CASA-GFED',
+                                     aqout_path=p.aqout_casa_gfed_lru135,
+                                     fcos_path=p.fcos_casa_gfed_lru135,
+                                     gpp_path=p.gee_casa_gfed,
+                                     gppraw_path=p.gee_casa_gfed_raw,
+                                     LRU=1.35),
+            'casa_m15_161': stemrun('CASA m15',
+                                    aqout_path=p.aqout_casa_m15_lru161,
+                                    fcos_path=p.fcos_casa_m15_lru161,
+                                    gpp_path=p.gee_casa_m15,
+                                    gppraw_path=p.gee_casa_m15_raw,
                                     LRU=1.61),
-            'casa_gfed_187':stemrun('CASA-GFED',
-                                    aqout_path=p.aqout_casa_gfed_lru187,
-                                    fcos_path=p.fcos_casa_gfed_lru187,
-                                    gpp_path=p.gee_casa_gfed,
-                                    gppraw_path=p.gee_casa_gfed_raw,
-                                    LRU=1.87),
-            'casa_gfed_135':stemrun('CASA-GFED',
-                                    aqout_path=p.aqout_casa_gfed_lru135,
-                                    fcos_path=p.fcos_casa_gfed_lru135,
-                                    gpp_path=p.gee_casa_gfed,
-                                    gppraw_path=p.gee_casa_gfed_raw,
-                                    LRU=1.35),
-            'casa_m15_161':stemrun('CASA m15',
-                                   aqout_path=p.aqout_casa_m15_lru161,
-                                   fcos_path=p.fcos_casa_m15_lru161,
-                                   gpp_path=p.gee_casa_m15,
-                                   gppraw_path=p.gee_casa_m15_raw,
-                                   LRU=1.61),
-            'kettle_161':stemrun('Kettle',
-                                 aqout_path=p.aqout_kettle_lru161,
-                                 fcos_path=p.fcos_kettle_lru161,
-                                 gpp_path=p.gee_kettle,
-                                 gppraw_path=p.gee_kettle_raw,
-                                 LRU=1.61),
-            'MPI_161':stemrun('MPI',
-                              aqout_path=p.aqout_MPI_lru161,
-                              fcos_path=p.fcos_MPI_lru161,
-                              gpp_path=p.gee_MPI,
-                              gppraw_path=p.gee_MPI_raw,
-                              LRU=1.61),
-            'canibis_161':stemrun('Can-IBIS',
-                                  aqout_path=p.aqout_CanIBIS_lru161,
-                                  fcos_path=p.fcos_CanIBIS_lru161,
-                                  gpp_path=p.gee_CanIBIS,
-                                  gppraw_path=p.gee_CanIBIS_raw,
+            'kettle_161': stemrun('Kettle',
+                                  aqout_path=p.aqout_kettle_lru161,
+                                  fcos_path=p.fcos_kettle_lru161,
+                                  gpp_path=p.gee_kettle,
+                                  gppraw_path=p.gee_kettle_raw,
                                   LRU=1.61),
+            'MPI_161': stemrun('MPI',
+                               aqout_path=p.aqout_MPI_lru161,
+                               fcos_path=p.fcos_MPI_lru161,
+                               gpp_path=p.gee_MPI,
+                               gppraw_path=p.gee_MPI_raw,
+                               LRU=1.61),
+            'canibis_161': stemrun('Can-IBIS',
+                                   aqout_path=p.aqout_CanIBIS_lru161,
+                                   fcos_path=p.fcos_CanIBIS_lru161,
+                                   gpp_path=p.gee_CanIBIS,
+                                   gppraw_path=p.gee_CanIBIS_raw,
+                                   LRU=1.61),
 
-            'casa_gfed_C4pctLRU':stemrun('CASA-GFED',
-                                    aqout_path=p.aqout_casa_gfed_C4pctLRU,
+            'casa_gfed_C4pctLRU': stemrun('CASA-GFED',
+                                          aqout_path=p.aqout_casa_gfed_C4pctLRU,
+                                          fcos_path=p.fcos_casa_gfed_C4pctLRU,
+                                          gpp_path=p.gee_casa_gfed,
+                                          gppraw_path=p.gee_casa_gfed_raw,
+                                          LRU='C3/C4'),
+            'casa_m15_C4pctLRU': stemrun('CASA m15',
+                                         aqout_path=p.aqout_casa_m15_C4pctLRU,
+                                         fcos_path=p.fcos_casa_m15_C4pctLRU,
+                                         gpp_path=p.gee_casa_m15,
+                                         gppraw_path=p.gee_casa_m15_raw,
+                                         LRU='C3/C4'),
+            'kettle_C4pctLRU': stemrun('Kettle',
+                                       aqout_path=p.aqout_kettle_C4pctLRU,
+                                       fcos_path=p.fcos_kettle_C4pctLRU,
+                                       gpp_path=p.gee_kettle,
+                                       gppraw_path=p.gee_kettle_raw,
+                                       LRU='C3/C4'),
+            'MPI_C4pctLRU': stemrun('MPI',
+                                    aqout_path=p.aqout_MPI_C4pctLRU,
+                                    fcos_path=p.fcos_MPI_C4pctLRU,
+                                    gpp_path=p.gee_MPI,
+                                    gppraw_path=p.gee_MPI_raw,
+                                    LRU='C3/C4'),
+            'canibis_C4pctLRU': stemrun('Can-IBIS',
+                                        aqout_path=p.aqout_CanIBIS_C4pctLRU,
+                                        fcos_path=p.fcos_CanIBIS_C4pctLRU,
+                                        gpp_path=p.gee_CanIBIS,
+                                        gppraw_path=p.gee_CanIBIS_raw,
+                                        LRU='C3/C4'),
+            'casa_gfed_pctm_bnd': stemrun('CASA-GFED',
+                                          aqout_path=p.aqout_casa_gfed_bnd,
+                                          fcos_path=p.fcos_casa_gfed_C4pctLRU,
+                                          gpp_path=p.gee_casa_gfed,
+                                          gppraw_path=p.gee_casa_gfed_raw,
+                                          LRU='C3/C4'),
+            'casa_gfed_KV': stemrun('CASA-GFED',
+                                    aqout_path=p.aqout_casa_gfed_KV,
                                     fcos_path=p.fcos_casa_gfed_C4pctLRU,
                                     gpp_path=p.gee_casa_gfed,
                                     gppraw_path=p.gee_casa_gfed_raw,
-                                    LRU='C3/C4'),
-            'casa_m15_C4pctLRU':stemrun('CASA m15',
-                                   aqout_path=p.aqout_casa_m15_C4pctLRU,
-                                   fcos_path=p.fcos_casa_m15_C4pctLRU,
-                                   gpp_path=p.gee_casa_m15,
-                                   gppraw_path=p.gee_casa_m15_raw,
-                                   LRU='C3/C4'),
-            'kettle_C4pctLRU':stemrun('Kettle',
-                                   aqout_path=p.aqout_kettle_C4pctLRU,
-                                   fcos_path=p.fcos_kettle_C4pctLRU,
-                                   gpp_path=p.gee_kettle,
-                                   gppraw_path=p.gee_kettle_raw,
-                                   LRU='C3/C4'),
-            'MPI_C4pctLRU':stemrun('MPI',
-                              aqout_path=p.aqout_MPI_C4pctLRU,
-                              fcos_path=p.fcos_MPI_C4pctLRU,
-                              gpp_path=p.gee_MPI,
-                              gppraw_path=p.gee_MPI_raw,
-                              LRU='C3/C4'),
-            'canibis_C4pctLRU':stemrun('Can-IBIS',
-                              aqout_path=p.aqout_CanIBIS_C4pctLRU,
-                              fcos_path=p.fcos_CanIBIS_C4pctLRU,
-                              gpp_path=p.gee_CanIBIS,
-                              gppraw_path=p.gee_CanIBIS_raw,
-                              LRU='C3/C4')})
+                                    LRU='C3/C4')})
+
 
 def get_C3C4runs():
     """
@@ -333,3 +366,15 @@ def get_C3C4runs():
     """
     c4runs = {k: v for k, v in get_runs().items() if k.find('C4') > 0}
     return(c4runs)
+
+
+def get_BASC_runs():
+    """
+    pulls the run driven by Sarika's PCTM data and the altered KV run
+    from the result of get_runs().  Returns a dict with the same
+    structure as the result of get_runs containing only these runs.
+    """
+    all_runs = get_runs()
+    basc_runs = {'casa_gfed_pctm_bnd': all_runs['casa_gfed_pctm_bnd'],
+                 'casa_gfed_KV': all_runs['casa_gfed_KV']}
+    return(basc_runs)
