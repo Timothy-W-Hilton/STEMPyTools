@@ -36,10 +36,10 @@ import STEM_parsers
 class NOAA_OCS(object):
     """
     Container class to work with NOAA airborne observations
-    
+
     Class attributes:
        obs: pandas DataFrame containing NOAA observations
-       obs_color: matplotlib color to use for plotting observations.  
+       obs_color: matplotlib color to use for plotting observations.
        grid_color: matplotlib color to use for plotting STEM grid cell points
     """
     def __init__(self,
@@ -53,7 +53,7 @@ class NOAA_OCS(object):
         typically it will be most useful to use the class method
         parse_file to create a NOAA_OCS object from a NOAA airborne
         obseration CSV file.
-        
+
         PARAMETERS
         ----------
         obs: Pandas DataFrame containing NOAA airborne observations.
@@ -90,12 +90,12 @@ class NOAA_OCS(object):
         fname: full path the NOAA file to be parsed
 
         returns: object of class noaa_ocs.NOAA_OCS.
-        
+
         """
 
         # the NOAA files contain varying number of header lines.  It
         # looks like the column names are always the last commented
-        # header line.  Now get the column names and the number of 
+        # header line.  Now get the column names and the number of
        # header lines.
         f = open(fname, 'r')
         ln = "#"  #initialize to empty comment
@@ -199,7 +199,7 @@ class NOAA_OCS(object):
                          self.obs.x_stem.values[i],
                          self.obs.y_stem.values[i]])
             #"+1" because python indices are 0-based, STEM indices are 1-based
-            self.obs['z_stem'].values[i] = bin_idx + 1 
+            self.obs['z_stem'].values[i] = bin_idx + 1
 
     def get_stem_t(self, stem_t0):
         """
@@ -238,7 +238,7 @@ class NOAA_OCS(object):
 
         # lon, lat for SW corner of map
         SW_crnr = (max(lon_min - lon_pad, -180),
-                   max(lat_min - lat_pad, -90)) 
+                   max(lat_min - lat_pad, -90))
         # lon, lat for NE corner of map
         NE_crnr = (min(lon_max + lon_pad, 720),
                    min(lat_max + lat_pad, 90))
@@ -311,7 +311,7 @@ class NOAA_OCS(object):
         for this_site in np.unique(data_agg.index):
             x, y = location_map.map(data_agg.loc[this_site].sample_longitude,
                                     data_agg.loc[this_site].sample_latitude)
-            plt.text(x, y, this_site, 
+            plt.text(x, y, this_site,
                      color=col, size=24.0,
                      horizontalalignment='left',
                      verticalalignment='bottom')
@@ -322,7 +322,11 @@ class NOAA_OCS(object):
         return(location_map)
 
 
-    def calculate_OCS_daily_vert_drawdown(self):
+    def calculate_OCS_daily_vert_drawdown(self,
+                                          altitude_bins= [0, 2000,
+                                                          3400, np.inf],
+                                          topo_fname=None,
+                                          wrfheight_fname=None):
         """
         calculate daily mean vertical drawdown of OCS by site.  As per
         conversation with Elliott of 30 Oct 2014 this function defines
@@ -331,12 +335,30 @@ class NOAA_OCS(object):
 
         INPUTS:
         data: noaa_ocs.NOAA_OCS object
+        altitude bins: four-element list defining top and bottom of
+            "surface" altitude bin and "high" altitude bin for
+            drawdown calculation.  Units are meters above ground
+            level.  Default is [0, 2000, 3400, np.inf].
 
         OUTPUT
         pandas.DataFrame containing daily OCS drawdown by site
         """
-        altitude_bins = [0, 2000, 4000, np.inf]
-        self.obs['alt_bin'] = pd.cut(x=self.obs.sample_altitude, bins=altitude_bins)
+        if topo_fname is None:
+            topo_fname = os.path.join(os.getenv('SARIKA_INPUT'),
+                                      'TOPO-124x124.nc')
+        if wrfheight_fname is None:
+            wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'),
+                                           'wrfheight-124x124-22levs.nc')
+        agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
+
+        #calulate noaa observation heights above ground level (m)
+        # ground level altiude above sea level
+        self.obs['alt_gl'] = asl[0, self.obs.x_stem, self.obs.y_stem]
+        # sample altitude above ground level
+        self.obs['sample_altitude_agl'] = (self.obs.sample_altitude -
+                                           self.obs.alt_gl)
+        self.obs['alt_bin'] = pd.cut(x=self.obs.sample_altitude_agl,
+                                     bins=altitude_bins)
 
         self.obs['date'] = [t.to_datetime().date() for t in self.obs.datet]
         agg_vars = ['date', 'sample_site_code', 'alt_bin', 'analysis_value']
@@ -352,10 +374,11 @@ class NOAA_OCS(object):
         # rearrange the data frame to put "low" (0 to 2000 m) observations
         # and "hi" (> 4000 m) in consecutive columns.  Fill in missing
         # observations with NaN.
-        lo = ocs_mean[ocs_mean.alt_bin == '(0, 2000]']
-        hi = ocs_mean[ocs_mean.alt_bin == '(4000, inf]']
-        mgd = pd.merge(lo, hi, 
-                       how='outer', 
+        lo = ocs_mean[ocs_mean.alt_bin == '({}, {}]'.format(altitude_bins[0],
+                                                            altitude_bins[1])]
+        hi = ocs_mean[ocs_mean.alt_bin == '({}, inf]'.format(altitude_bins[2])]
+        mgd = pd.merge(lo, hi,
+                       how='outer',
                        left_index=True,
                        right_index=True,
                        suffixes=('_lo', '_hi'))
@@ -507,8 +530,7 @@ def get_all_NOAA_airborne_data(noaa_dir):
     all_files = glob.glob(os.path.join(noaa_dir, '*ocs*.txt'))
     data_list = [NOAA_OCS.parse_file(f) for f in all_files]
     # Now combine all of the DataFrames into one large DataFrame
-    data = NOAA_OCS(obs=pd.concat([this_data.obs for 
+    data = NOAA_OCS(obs=pd.concat([this_data.obs for
                                    this_data in data_list]))
 
     return(data)
-
