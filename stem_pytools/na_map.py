@@ -28,7 +28,8 @@ class NAMapFigure(object):
                  lon_0=-105.0,
                  lat_0=54.0,
                  mapwidth=8.0e6,
-                 mapheight=6.5e6):
+                 mapheight=6.5e6,
+                 label_latlon=False):
         """
         class constructor for NAMapFigure.
 
@@ -55,6 +56,11 @@ class NAMapFigure(object):
         lat_0: latitude of the center of the map region
         mapheight: North-South span of the map (meters, I think)
         mapwidth: East-West span of the map (meters, I think)
+        label_latlon: True|{False}: if true, meridians and parallels
+           are labeled in the map margins.  This causes the map area
+           to shrink slightly to make room for the labels, so it
+           should be set to false if the map is to be part of a
+           multi-map grid.
 
         Notes:
         If either fig_sz_x or fig_sz_y are unspecified both arguments are
@@ -138,12 +144,20 @@ class NAMapFigure(object):
         self.map.fillcontinents(color=self.col_land,
                                 lake_color=self.col_water,
                                 zorder=0)
+        if label_latlon:
+            meridian_labels = (0, 0, 0, 1)  # labels on bottom
+            parallel_labels = (1, 0, 0, 0)  # labels on left
+        else:
+            meridian_labels = (0, 0, 0, 0)  # no labels
+            parallel_labels = (0, 0, 0, 0)  # no labels
         self.map.drawmeridians(meridians=range(0, -180, -15),
-                               labels=(0, 0, 0, 0),  # labels on bottom
-                               color=self.map_grid_col)
+                               labels=meridian_labels,
+                               color=self.map_grid_col,
+                               fontsize=10)
         self.map.drawparallels(circles=range(0, 90, 20),
-                               labels=(0, 0, 0, 0),  # labels on left
-                               color=self.map_grid_col)
+                               labels=parallel_labels,
+                               color=self.map_grid_col,
+                               fontsize=10)
 
     def add_ocs_contour_plot(self,
                              lons,
