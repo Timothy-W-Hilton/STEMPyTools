@@ -289,6 +289,19 @@ class NOAA_OCS(object):
             latlon=True)
         return(m, mrks)
 
+    def get_sites_lats_lons(self):
+        """calculate the mean latitude and longitude for each unique site
+        code in the data set.
+
+        RETURNS:
+           data frame containing columns ['sample_latitude',
+              'sample_longitude'] andindex 'sample_site_code'
+        """
+        agg_vars = ['sample_latitude', 'sample_longitude', 'sample_site_code']
+        data_agg = self.obs[agg_vars].groupby(
+            ['sample_site_code']).aggregate(np.mean)
+        return(data_agg)
+
     def plot_obs_site_locations(self):
         """
         plot a map of N America with obsertion sites labeled. The mean longitude
@@ -299,8 +312,7 @@ class NOAA_OCS(object):
         matplotlib.pyplot.figure containing the map
         """
 
-        agg_vars = ['sample_latitude', 'sample_longitude', 'sample_site_code']
-        data_agg = self.obs[agg_vars].groupby(['sample_site_code']).aggregate(np.mean)
+        data_agg = self.get_sites_lats_lons()
 
         fig = plt.figure(figsize=(12,12))
         ax = plt.axes()
