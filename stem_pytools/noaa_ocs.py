@@ -36,10 +36,10 @@ import STEM_parsers
 class NOAA_OCS(object):
     """
     Container class to work with NOAA airborne observations
-    
+
     Class attributes:
        obs: pandas DataFrame containing NOAA observations
-       obs_color: matplotlib color to use for plotting observations.  
+       obs_color: matplotlib color to use for plotting observations.
        grid_color: matplotlib color to use for plotting STEM grid cell points
     """
     def __init__(self,
@@ -53,7 +53,7 @@ class NOAA_OCS(object):
         typically it will be most useful to use the class method
         parse_file to create a NOAA_OCS object from a NOAA airborne
         obseration CSV file.
-        
+
         PARAMETERS
         ----------
         obs: Pandas DataFrame containing NOAA airborne observations.
@@ -90,12 +90,12 @@ class NOAA_OCS(object):
         fname: full path the NOAA file to be parsed
 
         returns: object of class noaa_ocs.NOAA_OCS.
-        
+
         """
 
         # the NOAA files contain varying number of header lines.  It
         # looks like the column names are always the last commented
-        # header line.  Now get the column names and the number of 
+        # header line.  Now get the column names and the number of
        # header lines.
         f = open(fname, 'r')
         ln = "#"  #initialize to empty comment
@@ -199,7 +199,7 @@ class NOAA_OCS(object):
                          self.obs.x_stem.values[i],
                          self.obs.y_stem.values[i]])
             #"+1" because python indices are 0-based, STEM indices are 1-based
-            self.obs['z_stem'].values[i] = bin_idx + 1 
+            self.obs['z_stem'].values[i] = bin_idx + 1
 
     def get_stem_t(self, stem_t0):
         """
@@ -238,7 +238,7 @@ class NOAA_OCS(object):
 
         # lon, lat for SW corner of map
         SW_crnr = (max(lon_min - lon_pad, -180),
-                   max(lat_min - lat_pad, -90)) 
+                   max(lat_min - lat_pad, -90))
         # lon, lat for NE corner of map
         NE_crnr = (min(lon_max + lon_pad, 720),
                    min(lat_max + lat_pad, 90))
@@ -289,6 +289,19 @@ class NOAA_OCS(object):
             latlon=True)
         return(m, mrks)
 
+    def get_sites_lats_lons(self):
+        """calculate the mean latitude and longitude for each unique site
+        code in the data set.
+
+        RETURNS:
+           data frame containing columns ['sample_latitude',
+              'sample_longitude'] andindex 'sample_site_code'
+        """
+        agg_vars = ['sample_latitude', 'sample_longitude', 'sample_site_code']
+        data_agg = self.obs[agg_vars].groupby(
+            ['sample_site_code']).aggregate(np.mean)
+        return(data_agg)
+
     def plot_obs_site_locations(self):
         """
         plot a map of N America with obsertion sites labeled. The mean longitude
@@ -299,8 +312,7 @@ class NOAA_OCS(object):
         matplotlib.pyplot.figure containing the map
         """
 
-        agg_vars = ['sample_latitude', 'sample_longitude', 'sample_site_code']
-        data_agg = self.obs[agg_vars].groupby(['sample_site_code']).aggregate(np.mean)
+        data_agg = self.get_sites_lats_lons()
 
         fig = plt.figure(figsize=(12,12))
         ax = plt.axes()
@@ -311,7 +323,7 @@ class NOAA_OCS(object):
         for this_site in np.unique(data_agg.index):
             x, y = location_map.map(data_agg.loc[this_site].sample_longitude,
                                     data_agg.loc[this_site].sample_latitude)
-            plt.text(x, y, this_site, 
+            plt.text(x, y, this_site,
                      color=col, size=24.0,
                      horizontalalignment='left',
                      verticalalignment='bottom')
@@ -354,8 +366,8 @@ class NOAA_OCS(object):
         # observations with NaN.
         lo = ocs_mean[ocs_mean.alt_bin == '(0, 2000]']
         hi = ocs_mean[ocs_mean.alt_bin == '(4000, inf]']
-        mgd = pd.merge(lo, hi, 
-                       how='outer', 
+        mgd = pd.merge(lo, hi,
+                       how='outer',
                        left_index=True,
                        right_index=True,
                        suffixes=('_lo', '_hi'))
@@ -507,8 +519,7 @@ def get_all_NOAA_airborne_data(noaa_dir):
     all_files = glob.glob(os.path.join(noaa_dir, '*ocs*.txt'))
     data_list = [NOAA_OCS.parse_file(f) for f in all_files]
     # Now combine all of the DataFrames into one large DataFrame
-    data = NOAA_OCS(obs=pd.concat([this_data.obs for 
+    data = NOAA_OCS(obs=pd.concat([this_data.obs for
                                    this_data in data_list]))
 
     return(data)
-
