@@ -11,12 +11,18 @@ def check_path_with_msg(this_path):
     If the specified path exists on the file system, return True.
     If it does not exist print a message to stdout and return False.
     """
-    if not(os.path.exists(this_path)):
-        sys.stdout.write('path not found: {}\n'.format(this_path))
-        sys.stdout.flush()
-        return(False)
-    else:
-        return(True)
+    try:
+        if not(os.path.exists(this_path)):
+            sys.stdout.write('path not found: {}\n'.format(this_path))
+            sys.stdout.flush()
+            return(False)
+        else:
+            return(True)
+    except TypeError:
+        if this_path is None:
+            sys.stdout.write('some paths are None\n')
+            sys.stdout.flush()
+            return(False)
 
 
 class paths(object):
@@ -198,7 +204,23 @@ class paths(object):
         self.fcos_CanIBIS_C4pctLRU = os.path.join(
             self.d_CanIBIS,
             'fCOS_CanIBIS_2008_124x124_LRUfromC4pct.nc')
-
+        # ===============
+        # Fsoil runs
+        # ===============
+        self.aqout_FsoilKettle = os.path.join(
+            os.getenv('HOME'),
+            'Stem_emi2_onespecies_big_ocssib',
+            'STEM_Runs_Fsoil',
+            'Kettle_Fsoil',
+            'output',
+            'AQOUT-124x124-22levs-Kettle_Fsoil.nc')
+        self.aqout_FsoilHybrid5Feb = os.path.join(
+            os.getenv('HOME'),
+            'Stem_emi2_onespecies_big_ocssib',
+            'STEM_Runs_Fsoil',
+            'Kettle_Whelan_hybrid_Fsoil',
+            'output',
+            'AQOUT-124x124-22levs-hybrid_Fsoil_5FebModel.nc')
 
 class stemrun(object):
     """
@@ -355,7 +377,20 @@ def get_runs():
                                     fcos_path=p.fcos_casa_gfed_C4pctLRU,
                                     gpp_path=p.gee_casa_gfed,
                                     gppraw_path=p.gee_casa_gfed_raw,
-                                    LRU='C3/C4')})
+                                    LRU='C3/C4'),
+
+            'Fsoil_Kettle': stemrun('Fsoil_Kettle',
+                                    aqout_path=p.aqout_FsoilKettle,
+                                    fcos_path=None,
+                                    gpp_path=None,
+                                    gppraw_path=None,
+                                    LRU=None),
+            'Fsoil_Hybrid5Feb': stemrun('Fsoil_Hybrid5Feb',
+                                        aqout_path=p.aqout_FsoilHybrid5Feb,
+                                        fcos_path=None,
+                                        gpp_path=None,
+                                        gppraw_path=None,
+                                        LRU=None)})
 
 
 def get_C3C4runs():
@@ -378,3 +413,13 @@ def get_BASC_runs():
     basc_runs = {'casa_gfed_pctm_bnd': all_runs['casa_gfed_pctm_bnd'],
                  'casa_gfed_KV': all_runs['casa_gfed_KV']}
     return(basc_runs)
+
+
+def get_Fsoil_runs():
+    """
+    pulls the C3/C4 weighted average LRU runs from the result of
+    get_runs().  Returns a dict with the same structure as the result
+    of get_runs containing only these runs.
+    """
+    fsoil_runs = {k: v for k, v in get_runs().items() if k.find('Fsoil') > 0}
+    return(fsoil_runs)
