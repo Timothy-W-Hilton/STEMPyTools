@@ -1,13 +1,155 @@
-import os
-import os.path
+import sys
 import numpy as np
+import os.path
+import os
 import pandas as pd
-import itertools
-from datetime import datetime, timedelta
+import netCDF4
+import warnings
 import cPickle
+from datetime import datetime, timedelta
+import itertools
 
-from stem_pytools import ecampbell300_data_paths as edp
 from stem_pytools import STEM_parsers as sp
+from stem_pytools.check_paths import check_path_with_msg
+from stem_pytools import ecampbell300_data_paths as edp
+
+
+class aqout_container(object):
+    """class to contain and optionally combine data from one or more
+    STEM AQOUT files.
+
+    CONTAINS FIELDS:
+    aqout_paths: list or tuple; full paths to the object's AQOUT file(s)
+    desc: character string; text describing the COS scenario described
+       in the object's data
+    key: character string; short string for use a key in a dict of
+       aqout scenarios
+
+    The class also provides a str method to produce a nicely formatted
+    printout of the paths it contains.
+
+    """
+    def __init__(self,
+                 aqout_paths=[],
+                 desc='',
+                 key=''):
+        """class constructor"""
+        self.desc = desc
+        self.key = key
+        self.aqout_paths = aqout_paths
+        self.data = []  # list to hold data arrays
+        self.t = []  # list to hold time stamp arrays
+        self.cos_total = None  # field to hold cos total
+
+    def __str__(self):
+        """ formatted printing of the paths in an aqout_combiner object. """
+        return('\n'.join(self.aqout_paths))
+
+    def all_paths_exist(self):
+        """Checks whether all files in object's aqout_paths exist.  If so
+        returns True.  If not, writes the path(s) that do/does not
+        exist to stdout and return False. """
+        all_exist = all([check_path_with_msg(p) for p in self.aqout_paths])
+        return(all_exist)
+
+    def parse(self, t0, t1, verbose=False):
+        """parse the concentrations in the object's AQOUT file(s) for the
+        period beginning with t0 and ending with t1.  The
+        concentration are placed in a list of numpy ndarray objects;
+        that list is placed in the calling object's 'data' field.  The
+        corresponding timestamps are also placed in a list.  That list
+        is then placed in the calling object's 't' field.
+
+        Assumes that the timestep of all AQOUT files is one hour.
+        Results are undefined if this requirement is not met.
+
+        INPUTS
+        t0, t1: datetime.datetime objects specifying the starting and
+            ending timestamps to combine
+
+        """
+
+        one_hour = 10000  # Models-3 I/O API format for 1 hour
+                          # (integer, HHMMSS)
+
+        for p in self.aqout_paths:
+            nc = netCDF4.Dataset(p)
+            tstep = nc.TSTEP
+            nc.close()
+            if tstep != one_hour:
+                raise ValueError('timestep of {} is not one hour!'
+                                 '(it is {})'.format(os.path.basename(p),
+                                                     tstep))
+            if verbose:
+                sys.stdout.write('parsing {}\n'.format(os.path.basename(p)))
+                sys.stdout.flush()
+            this_cos = sp.parse_STEM_var(p,
+                                         varname='CO2_TRACER1',
+                                         t0=t0,
+                                         t1=t1)
+            self.data.append(this_cos['data'])
+            this_t = pd.DatetimeIndex(this_cos['t'], freq='1H')
+            self.t.append(this_t)
+
+    def sum(self):
+        """Add AQOUT concentration fields together.  For now uses the
+        (simple-as-can-be) approach of adding together the parsed
+        concentration fields element-wise.  I've implemented the
+        adding as its own method so that the infrastructure is there
+        in the future to handle more complicated cases (such as AQOUT
+        files containing different timesteps).  """
+        if len(self.data) == 0:
+            raise ValueError('object {} contains no '
+                             'un-summed AQOUT data'.format(self.key))
+
+        assert all([self.t[0].equals(this_t) for this_t in self.t[1:]])
+        self.t = self.t[0]
+
+        self.cos_total = reduce(np.add, self.data)
+        del self.data
+        self.data = []
+
+    def calc_stats(self):
+        """
+
+        """
+        if self.cos_total is None:
+            raise ValueError('object {} contains no '
+                             'summed AQOUT data'.format(self.key))
+
+        self.t_stats, self.cos_mean = daily_window_stats(self.t,
+                                                         self.cos_total,
+                                                         is_midday,
+                                                         np.mean)
+        self.t_stats, self.cos_std = daily_window_stats(self.t,
+                                                        self.cos_total,
+                                                        is_midday,
+                                                        np.std)
+
+    def align_tstamps(self):
+        """This approach will work to combine aqout files at timestamps
+        that are present in both.  But it won't work to fill in timestamps
+        that are only present in one.  That's OK for now because all our
+        AQOUT files are hourly.  I wonder if I should plan ahead now for
+        AQOUT files with a different output time step.
+
+        In the case of different timesteps I think combining AQOUT files
+        via calls to the Models-3 I/O API routines (currstep, etc) would
+        be a better approach.  I wonder how difficult it would be to
+        access that fortran via python...  Would certainly be quicker to
+        just do the whole thing in Fortran... """
+
+        warnings.warn('this function is a placeholder/work in progress')
+        dfs = [pd.DataFrame(data=np.arange(len(t)),
+                            index=t)
+               for t in self.t]
+        # # this works as intended
+        # dfs[0].[1:8].merge(dfs[1].iloc[5:],
+        #                    how='inner',
+        #                    left_index=True, right_index=True)
+        dfs[0].merge(dfs[1], how='inner',
+                     left_index=True, right_index=True)
+        return(dfs)
 
 
 def is_midday(this_t):
