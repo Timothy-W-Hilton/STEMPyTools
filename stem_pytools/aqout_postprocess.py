@@ -126,6 +126,45 @@ class aqout_container(object):
                                                         is_midday,
                                                         np.std)
 
+    def stats_to_netcdf(self, fname):
+
+        """Write daily COS mean and standard deviation to a netCDF file.
+        This is meant to replace the cPickle saving.  My thinking here
+        is that these STEM results are useful, hopefully in the
+        slightly longer term, and a more portable,
+        platform-independent storage and transfer format is useful.
+
+        Note: netCDF file is opened in 'write' mode -- this means an
+        existing file named fname will be deleted."""
+
+        # TO DO: check here that mean, std dev have in fact been calculated
+
+        NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
+        NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
+
+        nc = netCDF4.Dataset(fname, 'w')
+
+        nc.createDimension('T', self.cos_mean.shape[0])
+        nc.createDimension('LAY', self.cos_mean.shape[1])
+        nc.createDimension('ROW', self.cos_mean.shape[2])
+        nc.createDimension('COL', self.cos_mean.shape[3])
+
+        nc.createVariable(varname='cos_mean',
+                          datatype=NC_DOUBLE,
+                          dimensions=(('T', 'LAY', 'ROW', 'COL')))
+        nc.createVariable(varname='cos_std',
+                          datatype=NC_DOUBLE,
+                          dimensions=(('T', 'LAY', 'ROW', 'COL')))
+        nc.createVariable(varname='t',
+                          datatype=NC_INT64,
+                          dimensions=(('T', 'LAY', 'ROW', 'COL')))
+
+        nc.variables['cos_mean'] = self.cos_mean
+        nc.variables['cos_std'] = self.cos_std
+        nc.variables['t'] = self.t_stats
+
+        nc.close()
+
     def align_tstamps(self):
         """This approach will work to combine aqout files at timestamps
         that are present in both.  But it won't work to fill in timestamps
