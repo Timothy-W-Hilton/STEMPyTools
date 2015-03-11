@@ -287,6 +287,11 @@ def assemble_data(model_runs=None, pickle_fname=None):
     all_data: dict containing (1), (2), and (3) above.
 
     """
+
+    warnings.warn('assemble_data is deprecated and will be removed in'
+                  ' the future.  Please use '
+                  'aqout_postprocess.aqout_container instead')
+
     if model_runs is None:
         model_runs = edp.get_runs()
 
@@ -335,39 +340,12 @@ def load_aqout_data(fname='/home/thilton/Data/STEM/aq_out_data.cpickle'):
     """
     load a cpickle data file containing aqout data written by assemble_data
     """
+    warnings.warn('load_aqout_data is deprecated and will be removed in'
+                  ' the future.  Please use '
+                  'aqout_postprocess.aqout_container instead')
+
     import cPickle
     f = open(fname, 'rb')
     all_data = cPickle.load(f)
     f.close()
     return(all_data)
-
-
-def demo():
-    fname = os.path.join('/', 'home', 'thilton',
-                         'Stem_emi2_onespecies_big_ocssib',
-                         'STEM_Runs_LRU_Paper',
-                         'CanIBIS_LRU1.61',
-                         'output',
-                         'AQOUT-124x124-22levs-CanIBIS_fCOS_LRU1.61.nc')
-
-    fname = os.path.join('/', 'Users', 'tim', 'work', 'Data', 'STEM',
-                         'output',
-                         'AQOUT-124x124-22levs-CanIBIS_fCOS_LRU1.61.nc')
-
-    t_ex = [datetime.now()]
-    cos = sp.parse_STEM_var(fname, varname='CO2_TRACER1')
-    t_ex.append(datetime.now())
-    t_mn, cos_md_mean = daily_window_stats(
-        pd.DatetimeIndex(cos['t'], freq='1H'),
-        cos['data'],
-        is_midday,
-        np.mean)
-    t_ex.append(datetime.now())
-    t_mn, cos_md_std = daily_window_stats(
-        pd.DatetimeIndex(cos['t'], freq='1H'),
-        cos['data'],
-        is_midday,
-        np.std)
-    t_ex.append(datetime.now())
-
-    return(t_ex, t_mn, cos_md_mean, cos_md_std)
