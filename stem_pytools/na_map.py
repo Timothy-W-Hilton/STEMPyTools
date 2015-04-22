@@ -8,6 +8,8 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
 
+from timutils import colormap_nlevs
+
 R_EARTH = 6371007.181000  # Earth radius in meters
 
 
@@ -211,25 +213,32 @@ class NAMapFigure(object):
         if vmax is None:
             vmax = data.max()
 
-        contour_levs = np.linspace(vmin,
-                                   vmax,
-                                   n_levs,
-                                   endpoint=True)
+        print('VMIN: {}, VMAX: {}'.format(vmin, vmax))
+
+        cmap, norm = colormap_nlevs.setup_colormap(vmin=vmin,
+                                                   vmax=vmax,
+                                                   nlevs=n_levs,
+                                                   cmap=cmap)
 
         cs = self.map.contourf(lons,
                                lats,
                                data,
                                ax=self.ax_map,
-                               levels=contour_levs,
-                               extend=extend,
                                latlon=True,
-                               cmap=cmap)
+                               cmap=cmap,
+                               vmin=vmin,
+                               vmax=vmax,
+                               norm=norm)
+
         if self.ax_cmap is not None:
             # plot a color legend
             plt.colorbar(mappable=cs,
                          cax=self.ax_cmap,
+                         cmap=cmap,
+                         norm=norm,
                          **colorbar_args)
-            self.ax_cmap.set_title(cbar_t_str)
+            if cbar_t_str is not None:
+                self.ax_cmap.set_title(cbar_t_str)
 
         if t_str is not None:
             # place a time label at (140, 20N) (out in the Pacific
