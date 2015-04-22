@@ -29,7 +29,8 @@ class NAMapFigure(object):
                  lat_0=54.0,
                  mapwidth=8.0e6,
                  mapheight=6.5e6,
-                 label_latlon=False):
+                 label_latlon=False,
+                 fast_or_pretty='pretty'):
         """
         class constructor for NAMapFigure.
 
@@ -61,6 +62,13 @@ class NAMapFigure(object):
            to shrink slightly to make room for the labels, so it
            should be set to false if the map is to be part of a
            multi-map grid.
+        fast_or_pretty: {'pretty'}|'fast': for 'fast', uses a
+           cylindrical projection (passes 'cyl' to the projection
+           parameter of basemap.Basemap).  For 'pretty', uses an
+           Azimuthal Equidistant projection (passes 'aeqd').  The
+           cylindrical projection runs much faster, which can add up
+           while fine-tuning plot properties for a figure that
+           incorporates several maps
 
         Notes:
         If either fig_sz_x or fig_sz_y are unspecified both arguments are
@@ -103,18 +111,25 @@ class NAMapFigure(object):
         if t_str is not None:
             self.ax_map.set_title(t_str)
 
-        mapwidth = mapwidth  # not sure of units for width/height
-        mapheight = mapwidth
-        self.map = Basemap(width=mapwidth,
-                           height=mapheight,
-                           projection='aeqd',
-                           lat_0=lat_0,
-                           lon_0=lon_0,
-                           resolution='l',
-                           area_thresh=1000,  # show features > 1000 km
-                           rsphere=R_EARTH,
-                           ax=self.ax_map,
-                           fix_aspect=True)
+        if fast_or_pretty is 'pretty':
+            mapwidth = mapwidth  # not sure of units for width/height
+            mapheight = mapwidth
+            self.map = Basemap(width=mapwidth,
+                               height=mapheight,
+                               projection='aeqd',
+                               lat_0=lat_0,
+                               lon_0=lon_0,
+                               resolution='l',
+                               area_thresh=1000,  # show features > 1000 km
+                               rsphere=R_EARTH,
+                               ax=self.ax_map,
+                               fix_aspect=True)
+        elif fast_or_pretty is "fast":
+            self.map = Basemap(projection='cyl',
+                               llcrnrlon=-160, llcrnrlat=15,
+                               urcrnrlon=-40, urcrnrlat=85,
+                               rsphere=R_EARTH,
+                               ax=self.ax_map)
 
         # define some colors
         if use_color:
