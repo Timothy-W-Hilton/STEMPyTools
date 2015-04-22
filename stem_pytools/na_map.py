@@ -187,7 +187,8 @@ class NAMapFigure(object):
                              cmap=cm.get_cmap('Blues'),
                              extend='neither',
                              cbar_t_str=None,
-                             colorbar_args={}):
+                             colorbar_args={},
+                             plotfunc=None):
         """Draw filled contours of the specified OCS data over the
         map.
 
@@ -206,6 +207,9 @@ class NAMapFigure(object):
         cbar_t_str: title string for colorbar
         colorbar_args: dict; additional keyword arguments to be passed
             to matplotlib.pypolt.colorbar
+        plotfunc: {basemap.Basemap.pcolor} |
+            basemap.Basemap.pcolormesh | basemap.Basemap.contourf:
+            function to produce the contour plot.
         """
 
         if vmin is None:
@@ -213,22 +217,22 @@ class NAMapFigure(object):
         if vmax is None:
             vmax = data.max()
 
-        print('VMIN: {}, VMAX: {}'.format(vmin, vmax))
-
         cmap, norm = colormap_nlevs.setup_colormap(vmin=vmin,
                                                    vmax=vmax,
                                                    nlevs=n_levs,
-                                                   cmap=cmap)
-
-        cs = self.map.contourf(lons,
-                               lats,
-                               data,
-                               ax=self.ax_map,
-                               latlon=True,
-                               cmap=cmap,
-                               vmin=vmin,
-                               vmax=vmax,
-                               norm=norm)
+                                                   cmap=cmap,
+                                                   extend=extend)
+        if plotfunc is None:
+            plotfunc = self.map.pcolor
+        cs = plotfunc(lons,
+                      lats,
+                      data,
+                      ax=self.ax_map,
+                      latlon=True,
+                      cmap=cmap,
+                      vmin=vmin,
+                      vmax=vmax,
+                      norm=norm)
 
         if self.ax_cmap is not None:
             # plot a color legend
