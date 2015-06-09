@@ -34,6 +34,13 @@ class aqout_container(object):
                  desc='',
                  key=''):
         """class constructor"""
+        # if the aqout_paths argument contains a single string,
+        # convert to a one-element tuple.  Doing that here rather than
+        # requiring that the aqout_paths be a tuple already allows for
+        # creating arguments for the constructor by, for example,
+        # calling itertools.product on two lists of strings.
+        if type(aqout_paths) is str:
+            aqout_paths = (aqout_paths,)
         self.desc = desc
         self.key = key
         self.aqout_paths = aqout_paths
@@ -155,17 +162,42 @@ class aqout_container(object):
         nc.createVariable(varname='cos_std',
                           datatype=NC_DOUBLE,
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
-        nc.createVariable(varname='t',
+        nc.createVariable(varname='time',
                           datatype=NC_INT64,
                           dimensions=(('T')))
 
-        nc.variables['cos_mean'][:] = self.cos_mean
-        nc.variables['cos_std'][:] = self.cos_std
-        nc.variables['t'][:] = map(datetime.toordinal, self.t_stats)
+        # describe units, etc.
+        nc.variables['time'].description = 'time stamp'
+        nc.variables['time'].units = 'YYYYMMDDhhhmmmss'
+        var = nc.variables['cos_mean']
+        var.description = 'mid-day COS concentration mean'
+        var.units = 'molecules cm-3'
+        var = nc.variables['cos_std']
+        var.description = ('mid-day COS concentration'
+                           'standard deviation')
+        var.units = 'molecules cm-3'
+        nc.key = self.key
+        nc.description = (self.desc +
+                          ('July and August North '
+                           'American mid-day [COS]'
+                           'mean and standard deviation.  Mid-day is '
+                           'defined as between 15:00 and 23:00 UTC, '
+                           'which is 10:00 EST to 15:00 PST.'))
+
+        # ----------
+        # I think this is superseded by the below, but I've gotten
+        # confused by my git branches and commits and I'm not sure.
+        # So I'm holding onto both for the time being
+        # nc.variables['cos_mean'][:] = self.cos_mean
+        # nc.variables['cos_std'][:] = self.cos_std
+        # nc.variables['t'][:] = map(datetime.toordinal, self.t_stats)
+        # ----------
+        nc.variables['cos_mean'][...] = self.cos_mean
+        nc.variables['cos_std'][...] = self.cos_std
+        nc.variables['time'][...] = map(
+            lambda x: np.int(x.strftime('%Y%m%d%H%M%S')), self.t_stats)
 
         nc.close()
-
-        print('min, max 3: {}, {}'.format(self.cos_mean.min(), self.cos_mean.max()))
 
     def align_tstamps(self):
         """This approach will work to combine aqout files at timestamps
