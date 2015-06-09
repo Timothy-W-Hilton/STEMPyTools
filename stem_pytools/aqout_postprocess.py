@@ -157,13 +157,15 @@ class aqout_container(object):
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
         nc.createVariable(varname='t',
                           datatype=NC_INT64,
-                          dimensions=(('T', 'LAY', 'ROW', 'COL')))
+                          dimensions=(('T')))
 
-        nc.variables['cos_mean'] = self.cos_mean
-        nc.variables['cos_std'] = self.cos_std
-        nc.variables['t'] = self.t_stats
+        nc.variables['cos_mean'][:] = self.cos_mean
+        nc.variables['cos_std'][:] = self.cos_std
+        nc.variables['t'][:] = map(datetime.toordinal, self.t_stats)
 
         nc.close()
+
+        print('min, max 3: {}, {}'.format(self.cos_mean.min(), self.cos_mean.max()))
 
     def align_tstamps(self):
         """This approach will work to combine aqout files at timestamps
