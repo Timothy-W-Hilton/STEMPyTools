@@ -117,7 +117,19 @@ class aqout_container(object):
         self.data = []
 
     def calc_stats(self):
+        """calculate mean and standard deviation across entire set of AQOUT
+        concentrations
         """
+        if self.cos_total is None:
+            raise ValueError('object {} contains no '
+                             'summed AQOUT data'.format(self.key))
+        self.t_stats = [self.t[0]]
+        self.cos_mean = np.mean(self.cos_total, axis=0)[np.newaxis, ...]
+        self.cos_std = np.std(self.cos_total, axis=0)[np.newaxis, ...]
+
+    def calc_stats_daily(self):
+        """calculate daily mid-day mean and standard deviation AQOUT
+        concentrations
 
         """
         if self.cos_total is None:
@@ -149,6 +161,7 @@ class aqout_container(object):
         NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
         NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
 
+        delete_if_exists(fname)
         nc = netCDF4.Dataset(fname, 'w')
 
         nc.createDimension('T', self.cos_mean.shape[0])
@@ -357,3 +370,49 @@ def load_aqout_data(fname='/home/thilton/Data/STEM/aq_out_data.cpickle'):
     all_data = cPickle.load(f)
     f.close()
     return(all_data)
+
+
+def demo():
+    fname = os.path.join('/', 'home', 'thilton',
+                         'Stem_emi2_onespecies_big_ocssib',
+                         'STEM_Runs_LRU_Paper',
+                         'CanIBIS_LRU1.61',
+                         'output',
+                         'AQOUT-124x124-22levs-CanIBIS_fCOS_LRU1.61.nc')
+
+    fname = os.path.join('/', 'Users', 'tim', 'work', 'Data', 'STEM',
+                         'output',
+                         'AQOUT-124x124-22levs-CanIBIS_fCOS_LRU1.61.nc')
+
+    t_ex = [datetime.now()]
+    cos = sp.parse_STEM_var(fname, varname='CO2_TRACER1')
+    t_ex.append(datetime.now())
+    t_mn, cos_md_mean = daily_window_stats(
+        pd.DatetimeIndex(cos['t'], freq='1H'),
+        cos['data'],
+        is_midday,
+        np.mean)
+    t_ex.append(datetime.now())
+    t_mn, cos_md_std = daily_window_stats(
+        pd.DatetimeIndex(cos['t'], freq='1H'),
+        cos['data'],
+        is_midday,
+        np.std)
+    t_ex.append(datetime.now())
+
+    return(t_ex, t_mn, cos_md_mean, cos_md_std)
+
+def delete_if_exists(fname):
+    """remove a file if it exists, with a message to stdout.
+
+    This function is part of TimUtils.io.  Other parts of TimUtils depend
+    on Matplotlib.  Matplotlib won't install on the workaround server.
+    Therefore I'm including this code here to make it available to
+    this module.
+    """
+    if os.path.exists(fname):
+        sys.stdout.write('removed {}\n'.format(fname))
+        sys.stdout.flush()
+        os.remove(fname)
+        if os.path.exists(fname):
+            raise OSError('file still exists')

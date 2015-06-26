@@ -8,10 +8,9 @@ from stem_pytools.check_paths import check_path_with_msg
 
 class paths(object):
     def __init__(self):
-        self.d_proj = os.path.join('/', 'home', 'thilton',
-                                   'projects', 'COS (ecampbell3)')
+        self.d_proj = os.path.join(os.getenv('HOME'), 'COS')
         self.d_stemrun_root = os.path.join(
-            '/home',
+            os.getenv('HOME'),
             'thilton',
             'Stem_emi2_onespecies_big_ocssib',
             'STEM_Runs_LRU_Paper')
@@ -20,10 +19,13 @@ class paths(object):
         # model directories
         # ===============
         self.d_casa_gfed = os.path.join(self.d_proj,
+                                        'Additional_Flux_Models',
                                         'CASA_GFED nacp download')
         self.d_casa_m15 = os.path.join(self.d_proj,
+                                       'Additional_Flux_Models',
                                        'CASA_oldCASA_from_Collatz')
         self.d_kettle = os.path.join(self.d_proj,
+                                     'Additional_Flux_Models',
                                      'kettle fluxes')
         self.d_MPI = os.path.join(self.d_proj,
                                   'Additional_Flux_Models',
@@ -405,3 +407,20 @@ def get_Fsoil_runs():
     """
     fsoil_runs = {k: v for k, v in get_runs().items() if k.find('Fsoil') > 0}
     return(fsoil_runs)
+
+
+def get_LRUpaper_runs():
+    """pulls the STEM runs used in the LRU paper from the result of
+    get_runs().  Returns a dict with the same structure as the result
+    of get_runs containing only these runs.
+
+    """
+    all_runs = get_runs()
+    lru_paper_runs = {'casa_gfed_161': all_runs['casa_gfed_161'],
+                      'casa_gfed_187': all_runs['casa_gfed_187'],
+                      'casa_gfed_135': all_runs['casa_gfed_135'],
+                      'casa_m15_161': all_runs['casa_m15_161'],
+                      'kettle_161': all_runs['kettle_161'],
+                      'MPI_161': all_runs['MPI_161'],
+                      'canibis_161': all_runs['canibis_161']}
+    return(lru_paper_runs)
