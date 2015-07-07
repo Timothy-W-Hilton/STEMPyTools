@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import maskoceans
+
 import domain
 from stem_pytools.na_map import NAMapFigure
 
@@ -28,7 +30,12 @@ class Mapper124x124(object):
                  t_str='124x124 quick plot',
                  n_levs=9,
                  vmin=None,
-                 vmax=None):
+                 vmax=None,
+                 cmap=None,
+                 norm=None,
+                 maskoceans_switch=False,
+                 label_latlon=True,
+                 cbar_fmt_str=None):
         """draw a quick map of a 124x124 field on the STEM domain
 
         INPUTS
@@ -46,13 +53,22 @@ class Mapper124x124(object):
 
         self.map = NAMapFigure(t_str=t_str,
                                cb_axis=True,
-                               fast_or_pretty=fast_or_pretty)
-        cm = self.map.add_ocs_contour_plot(self.lon_stem,
-                                           self.lat_stem,
-                                           self.field_124x124,
-                                           n_levs=n_levs,
-                                           vmin=vmin,
-                                           vmax=vmax)
-        plt.colorbar(cm, cax=self.map.ax_cmap)
+                               fast_or_pretty=fast_or_pretty,
+                               label_latlon=label_latlon)
+
+        if maskoceans_switch:
+            self.field_124x124 = maskoceans(
+                self.lon_stem, self.lat_stem, self.field_124x124,
+                resolution='f')
+
+        cm = self.map.map.pcolor(self.lon_stem,
+                                 self.lat_stem,
+                                 self.field_124x124,
+                                 vmin=vmin,
+                                 vmax=vmax,
+                                 cmap=cmap,
+                                 norm=norm,
+                                 latlon='True')
+        plt.colorbar(cm, cax=self.map.ax_cmap, format=cbar_fmt_str)
 
         return(self)
