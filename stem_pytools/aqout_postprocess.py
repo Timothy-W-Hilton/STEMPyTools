@@ -337,7 +337,7 @@ def assemble_data(model_runs=None, pickle_fname=None):
     all_data_dict = {'t': t_dict,
                      'cos_mean': cos_mean_dict,
                      'cos_std': cos_std_dict}
-    outfile = open('/home/thilton/Data/STEM/aq_out_data_BASC.cpickle', 'wb')
+    outfile = open(pickle_fname, 'wb')
     cPickle.dump(all_data_dict, outfile, protocol=2)
     outfile.close()
 
