@@ -11,7 +11,7 @@ import itertools
 
 from stem_pytools import STEM_parsers as sp
 from stem_pytools.check_paths import check_path_with_msg
-from stem_pytools import ecampbell300_data_paths as edp
+from stem_pytools import NERSC_data_paths as ndp
 
 
 class aqout_container(object):
@@ -286,7 +286,7 @@ def assemble_data(model_runs=None, pickle_fname=None):
 
     INPUT PARAMETERS
     model_runs: dict of STEMRun objects.  If unspecified the default
-        is the output of stem_pytools.ecampbell300_data_paths.get_runs()
+        is the output of stem_pytools.NERSC_data_paths.get_runs()
     pickle_fname: full path of the cpickle file to create.  If
         unspecified the default is
         /home/thilton/Data/STEM/aq_out_data.cpickle
@@ -301,7 +301,7 @@ def assemble_data(model_runs=None, pickle_fname=None):
                   'aqout_postprocess.aqout_container instead')
 
     if model_runs is None:
-        model_runs = edp.get_runs()
+        model_runs = ndp.get_runs()
 
     t = []
     cos_mean = []

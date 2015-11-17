@@ -35,7 +35,10 @@ class paths(object):
                                       'Data',
                                       'Additional_Flux_Models',
                                       'CAN-IBIS')
-
+        self.d_SiB = os.path.join(self.d_proj,
+                                  'Data',
+                                  'Additional_Flux_Models',
+                                  'SiB_from_Ian_2015-03-13')
         # ===============
         # CASA-GFED files
         # ===============
@@ -54,8 +57,7 @@ class paths(object):
             'CASA-GFED_LRU1.61', 'output',
             'AQOUT-124x124-22levs-CASA-GFED_fCOS_LRU1.61.nc')
         self.aqout_casa_gfed_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'CASA-GFED_C4pctLRU',
             'output',
@@ -75,15 +77,13 @@ class paths(object):
             self.d_casa_gfed,
             'CASA-GFED_fCOS_3hrly_2008_124x124_LRU1.87.nc')
         self.aqout_casa_gfed_bnd = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_BoundaryConditions',
             'CASA-GFED_PCTM_Sarika',
             'output',
             'AQOUT-124x124-22levs-CASA-GFED_fCOS_C4pctLRU.nc')
         self.aqout_casa_gfed_KV = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_ConvectionSensitivity',
             'CASA-GFED_doubleKVgt45',
             'output',
@@ -105,8 +105,7 @@ class paths(object):
             self.d_casa_m15,
             'CASA-m15_fCOS_3hrly_2008_124x124_LRU1.61.nc')
         self.aqout_casa_m15_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'CASA-m15_C4pctLRU', 'output',
             'AQOUT-124x124-22levs-CASA-m15_fCOS_C4pctLRU.nc')
@@ -130,8 +129,7 @@ class paths(object):
             'Kettle_fCOS_LRU1.61', 'output',
             'AQOUT-124x124-22levs-Kettle_fCOS_LRU1.61.nc')
         self.aqout_kettle_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'Kettle_C4pctLRU',
             'output',
@@ -155,8 +153,7 @@ class paths(object):
             self.d_MPI,
             'EnsembleGPP_MR_May12.2008.nc')
         self.aqout_MPI_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'MPI_C4pctLRU',
             'output',
@@ -180,8 +177,7 @@ class paths(object):
             self.d_CanIBIS,
             'CanIBIS_GPP_raw.IOAPI.nc')
         self.aqout_CanIBIS_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'Can-IBIS_C4pctLRU',
             'output',
@@ -190,14 +186,33 @@ class paths(object):
             self.d_CanIBIS,
             'fCOS_CanIBIS_2008_124x124_LRUfromC4pct.nc')
         # ===============
+        # SiB files
+        # ===============
+        self.fcos_SiB_calc = os.path.join(
+            self.d_SiB,
+            'SiB_124x124_Fplant_calc_2008JulAug.nc')
+        self.aqout_SiB_calc = os.path.join(
+            '/', 'project', 'projectdirs', 'm2319',
+            'STEM_Runs',
+            'STEM_SiB_calculated_LRU1.61',
+            'output',
+            'AQOUT-124x124-22levs-SiBcalc_fCOS_LRU1.61.nc')
+        self.fcos_SiB_mech = os.path.join(
+            self.d_SiB,
+            'SiB_124x124_Fplant_mech_2008JulAug.nc')
+        self.aqout_SiB_mech = os.path.join(
+            '/', 'project', 'projectdirs', 'm2319',
+            'STEM_Runs',
+            'STEM_SiB_mechanistic_LRU1.61',
+            'output',
+            'AQOUT-124x124-22levs-SiBmech_fCOS_LRU1.61.nc')
+
+        # ===============
         # Fsoil runs
         # ===============
         self.aqout_FsoilKettle = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
-            'STEM_Runs_Fsoil',
-            'Kettle_Fsoil',
-            'output',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
+            'STEM_Runs_Fsoil', 'Kettle_Fsoil', 'output',
             'AQOUT-124x124-22levs-Kettle_Fsoil.nc')
         self.fcos_FsoilHybrid5Feb = os.path.join(
             self.d_proj,
@@ -397,7 +412,19 @@ def get_runs():
                                        fcos_path=None,
                                        gpp_path=None,
                                        gppraw_path=None,
-                                       LRU=None)})
+                                       LRU=None),
+            'SiB_mech': stemrun('SiB_mech',
+                                aqout_path=p.aqout_SiB_mech,
+                                fcos_path=p.fcos_SiB_mech,
+                                gpp_path=None,
+                                gppraw_path=None,
+                                LRU=None),
+            'SiB_calc': stemrun('SiB_calc',
+                                aqout_path=p.aqout_SiB_calc,
+                                fcos_path=p.fcos_SiB_calc,
+                                gpp_path=None,
+                                gppraw_path=None,
+                                LRU=None)})
 
 
 def get_C3C4runs():
