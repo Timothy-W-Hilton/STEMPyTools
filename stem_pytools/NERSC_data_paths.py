@@ -39,6 +39,10 @@ class paths(object):
                                   'Data',
                                   'Additional_Flux_Models',
                                   'SiB_from_Ian_2015-03-13')
+        self.d_Anthro = os.path.join(self.d_proj,
+                                     'Data',
+                                     'Anth_COS')
+
         # ===============
         # CASA-GFED files
         # ===============
@@ -237,6 +241,16 @@ class paths(object):
             self.d_proj,
             'STEM_Runs', 'STEM_NAmerica_GEOS-Chem_bounds', 'output',
             'AQOUT.GEOS-Chem_bnd.nc')
+        # ===============
+        # Anthropogenic surface flux runs  (by Andrew Zumkehr)
+        # ===============
+        self.aqout_Anthro = os.path.join(
+            self.d_Anthro,
+            'AQOUT-124x124-22levs-coal-cos_2008_2009_0.5.nc')
+        self.fcos_Anthro = os.path.join(
+            self.d_Anthro,
+            'gurney_coal_124x124.nc')
+
 
 class stemrun(object):
     """
@@ -424,7 +438,13 @@ def get_runs():
                                 fcos_path=p.fcos_SiB_calc,
                                 gpp_path=None,
                                 gppraw_path=None,
-                                LRU=None)})
+                                LRU=None),
+            'Anthro': stemrun('Anthro',
+                              aqout_path=p.aqout_Anthro,
+                              fcos_path=p.fcos_Anthro,
+                              gpp_path=None,
+                              gppraw_path=None,
+                              LRU=None)})
 
 
 def get_C3C4runs():
@@ -467,3 +487,18 @@ def get_Boundaries_runs():
     """
     bounds_runs = {k: v for k, v in get_runs().items() if k.find('bounds') >= 0}
     return(bounds_runs)
+
+
+def get_Spatial_Paper_runs(spatial_runs=None, const_cos=4.5e-10):
+    """remove a handful of runs that I'm not using in the spatial
+    paper from the get_runs() dict, and calculate GEOS-Chem boundaries
+    results from the plant flux runs.
+    """
+    if spatial_runs is None:
+        spatial_runs = get_runs()
+    keys_to_remove = ['casa_gfed_pctm_bnd', 'casa_gfed_KV']
+    for k in keys_to_remove:
+        if k in spatial_runs:
+            del spatial_runs[k]
+
+    return(spatial_runs)
