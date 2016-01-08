@@ -241,6 +241,10 @@ class paths(object):
             self.d_proj,
             'STEM_Runs', 'STEM_NAmerica_GEOS-Chem_bounds', 'output',
             'AQOUT.GEOS-Chem_bnd.nc')
+        self.aqout_clim_bnds = os.path.join(
+            self.d_proj,
+            'STEM_Runs', 'STEM_NAmerica_Climatological_Bounds', 'output',
+            'AQOUT.climatological_bnd.nc')
         # ===============
         # Anthropogenic surface flux runs  (by Andrew Zumkehr)
         # ===============
@@ -453,7 +457,13 @@ def get_runs():
                                      fcos_path=None,
                                      gpp_path=None,
                                      gppraw_path=None,
-                                     LRU=None)})
+                                     LRU=None),
+            'climatological_bnd': stemrun('Climatological_bounds',
+                                          aqout_path=p.aqout_clim_bnds,
+                                          fcos_path=None,
+                                          gpp_path=None,
+                                          gppraw_path=None,
+                                          LRU=None)})
 
 
 def get_C3C4runs():
