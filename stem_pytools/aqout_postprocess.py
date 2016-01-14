@@ -312,7 +312,7 @@ def assemble_data(model_runs=None, pickle_fname=None):
         print 'processing {}'.format(k)
         this_cos = sp.parse_STEM_var(run.aqout_path,
                                      varname='CO2_TRACER1',
-                                     t0=datetime(2008, 7, 1),
+                                     t0=datetime(2008, 7, 8),
                                      t1=datetime(2008, 8, 31, 23, 59, 59))
         t_data = pd.DatetimeIndex(this_cos['t'], freq='1H')
 
