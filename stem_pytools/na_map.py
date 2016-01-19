@@ -8,8 +8,6 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
 
-from timutils import colormap_nlevs
-
 R_EARTH = 6371007.181000  # Earth radius in meters
 
 
@@ -27,10 +25,10 @@ class NAMapFigure(object):
                  missing_axis=None,
                  fig_sz_x=None,
                  fig_sz_y=None,
-                 lon_0=-105.0,
-                 lat_0=54.0,
-                 mapwidth=8.0e6,
-                 mapheight=6.5e6,
+                 lon_0=-88.5,
+                 lat_0=55.5,
+                 mapwidth=9.0e6,
+                 mapheight=7.2e6,
                  label_latlon=False,
                  fast_or_pretty='pretty'):
         """
@@ -187,8 +185,7 @@ class NAMapFigure(object):
                              cmap=cm.get_cmap('Blues'),
                              extend='neither',
                              cbar_t_str=None,
-                             colorbar_args={},
-                             plotfunc=None):
+                             colorbar_args={}):
         """Draw filled contours of the specified OCS data over the
         map.
 

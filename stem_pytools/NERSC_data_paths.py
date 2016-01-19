@@ -8,29 +8,40 @@ from stem_pytools.check_paths import check_path_with_msg
 
 class paths(object):
     def __init__(self):
-        self.d_proj = os.path.join('/', 'home', 'thilton',
-                                   'projects', 'COS (ecampbell3)')
+        self.d_proj = os.getenv('PROJ')
         self.d_stemrun_root = os.path.join(
-            '/home',
-            'thilton',
-            'Stem_emi2_onespecies_big_ocssib',
-            'STEM_Runs_LRU_Paper')
+            '/', 'project', 'projectdirs', 'm2319', 'STEM_Runs',
+            'Tim_from_ecampbell300', 'STEM_Runs_LRU_Paper')
 
         # ===============
         # model directories
         # ===============
         self.d_casa_gfed = os.path.join(self.d_proj,
-                                        'CASA_GFED nacp download')
+                                        'Data',
+                                        'Additional_Flux_Models',
+                                        'CASA_GFED_nacp_download')
         self.d_casa_m15 = os.path.join(self.d_proj,
+                                       'Data',
+                                       'Additional_Flux_Models',
                                        'CASA_oldCASA_from_Collatz')
         self.d_kettle = os.path.join(self.d_proj,
+                                     'Data',
                                      'kettle fluxes')
         self.d_MPI = os.path.join(self.d_proj,
+                                  'Data',
                                   'Additional_Flux_Models',
                                   'MPI_BGC_Fluxes')
         self.d_CanIBIS = os.path.join(self.d_proj,
+                                      'Data',
                                       'Additional_Flux_Models',
                                       'CAN-IBIS')
+        self.d_SiB = os.path.join(self.d_proj,
+                                  'Data',
+                                  'Additional_Flux_Models',
+                                  'SiB_from_Ian_2015-03-13')
+        self.d_Anthro = os.path.join(self.d_proj,
+                                     'Data',
+                                     'Anth_COS')
 
         # ===============
         # CASA-GFED files
@@ -50,8 +61,7 @@ class paths(object):
             'CASA-GFED_LRU1.61', 'output',
             'AQOUT-124x124-22levs-CASA-GFED_fCOS_LRU1.61.nc')
         self.aqout_casa_gfed_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'CASA-GFED_C4pctLRU',
             'output',
@@ -71,15 +81,13 @@ class paths(object):
             self.d_casa_gfed,
             'CASA-GFED_fCOS_3hrly_2008_124x124_LRU1.87.nc')
         self.aqout_casa_gfed_bnd = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_BoundaryConditions',
             'CASA-GFED_PCTM_Sarika',
             'output',
             'AQOUT-124x124-22levs-CASA-GFED_fCOS_C4pctLRU.nc')
         self.aqout_casa_gfed_KV = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_ConvectionSensitivity',
             'CASA-GFED_doubleKVgt45',
             'output',
@@ -101,8 +109,7 @@ class paths(object):
             self.d_casa_m15,
             'CASA-m15_fCOS_3hrly_2008_124x124_LRU1.61.nc')
         self.aqout_casa_m15_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'CASA-m15_C4pctLRU', 'output',
             'AQOUT-124x124-22levs-CASA-m15_fCOS_C4pctLRU.nc')
@@ -126,8 +133,7 @@ class paths(object):
             'Kettle_fCOS_LRU1.61', 'output',
             'AQOUT-124x124-22levs-Kettle_fCOS_LRU1.61.nc')
         self.aqout_kettle_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'Kettle_C4pctLRU',
             'output',
@@ -151,8 +157,7 @@ class paths(object):
             self.d_MPI,
             'EnsembleGPP_MR_May12.2008.nc')
         self.aqout_MPI_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'MPI_C4pctLRU',
             'output',
@@ -176,8 +181,7 @@ class paths(object):
             self.d_CanIBIS,
             'CanIBIS_GPP_raw.IOAPI.nc')
         self.aqout_CanIBIS_C4pctLRU = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
             'STEM_Runs_C4pctLRU/',
             'Can-IBIS_C4pctLRU',
             'output',
@@ -186,22 +190,73 @@ class paths(object):
             self.d_CanIBIS,
             'fCOS_CanIBIS_2008_124x124_LRUfromC4pct.nc')
         # ===============
+        # SiB files
+        # ===============
+        self.fcos_SiB_calc = os.path.join(
+            self.d_SiB,
+            'SiB_124x124_Fplant_calc_2008JulAug.nc')
+        self.aqout_SiB_calc = os.path.join(
+            '/', 'project', 'projectdirs', 'm2319',
+            'STEM_Runs',
+            'STEM_SiB_calculated_LRU1.61',
+            'output',
+            'AQOUT-124x124-22levs-SiBcalc_fCOS_LRU1.61.nc')
+        self.fcos_SiB_mech = os.path.join(
+            self.d_SiB,
+            'SiB_124x124_Fplant_mech_2008JulAug.nc')
+        self.aqout_SiB_mech = os.path.join(
+            '/', 'project', 'projectdirs', 'm2319',
+            'STEM_Runs',
+            'STEM_SiB_mechanistic_LRU1.61',
+            'output',
+            'AQOUT-124x124-22levs-SiBmech_fCOS_LRU1.61.nc')
+
+        # ===============
         # Fsoil runs
         # ===============
         self.aqout_FsoilKettle = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
-            'STEM_Runs_Fsoil',
-            'Kettle_Fsoil',
-            'output',
+            self.d_proj, 'STEM_Runs', 'Tim_from_ecampbell300',
+            'STEM_Runs_Fsoil', 'Kettle_Fsoil', 'output',
             'AQOUT-124x124-22levs-Kettle_Fsoil.nc')
+        self.fcos_FsoilHybrid5Feb = os.path.join(
+            self.d_proj,
+            'Data', 'STEM_124x124_NA_inputs',
+            'whelan_kettle_hybrid_fsoil_124x124.nc')
         self.aqout_FsoilHybrid5Feb = os.path.join(
-            os.getenv('HOME'),
-            'Stem_emi2_onespecies_big_ocssib',
-            'STEM_Runs_Fsoil',
-            'Kettle_Whelan_hybrid_Fsoil',
+            '/', 'project',
+            'projectdirs',
+            'm2319',
+            'STEM_Runs',
+            'STEM_NAmerica_WhelanKettleFsoil',
             'output',
             'AQOUT-124x124-22levs-hybrid_Fsoil_5FebModel.nc')
+        self.fcos_FsoilKettle = os.path.join(
+            self.d_proj,
+            'Data', 'STEM_124x124_NA_inputs',
+            'surfem-124x124-kettle-soil-cos_2008_2009.nc')
+        # ===============
+        # Boundary condition runs
+        # ===============
+        self.aqout_GEOSChem_Bounds = os.path.join(
+            self.d_proj,
+            'STEM_Runs', 'STEM_NAmerica_GEOS-Chem_bounds', 'output',
+            'AQOUT.GEOS-Chem_bnd.nc')
+        self.aqout_clim_bnds = os.path.join(
+            self.d_proj,
+            'STEM_Runs', 'STEM_NAmerica_Climatological_Bounds', 'output',
+            'AQOUT.climatological_bnd.nc')
+        # ===============
+        # Anthropogenic surface flux runs  (by Andrew Zumkehr)
+        # ===============
+        self.aqout_Anthro_Andrew = os.path.join(
+            self.d_Anthro,
+            'AQOUT-124x124-22levs-coal-cos_2008_2009_0.5_backup.nc')
+        self.fcos_Anthro_Andrew = os.path.join(
+            self.d_Anthro,
+            'gurney_coal_124x124.nc')
+        self.aqout_Anthro_Kettle = os.path.join(
+            self.d_Anthro,
+            'AQOUT_124x124-22leves-kettle-coal_cos_2008_2009.nc')
 
 
 class stemrun(object):
@@ -363,16 +418,52 @@ def get_runs():
 
             'Fsoil_Kettle': stemrun('Fsoil_Kettle',
                                     aqout_path=p.aqout_FsoilKettle,
-                                    fcos_path=None,
+                                    fcos_path=p.fcos_FsoilKettle,
                                     gpp_path=None,
                                     gppraw_path=None,
                                     LRU=None),
             'Fsoil_Hybrid5Feb': stemrun('Fsoil_Hybrid5Feb',
                                         aqout_path=p.aqout_FsoilHybrid5Feb,
-                                        fcos_path=None,
+                                        fcos_path=p.fcos_FsoilHybrid5Feb,
                                         gpp_path=None,
                                         gppraw_path=None,
-                                        LRU=None)})
+                                        LRU=None),
+            'GEOSChem_bounds': stemrun('GEOSChem_bounds',
+                                       aqout_path=p.aqout_GEOSChem_Bounds,
+                                       fcos_path=None,
+                                       gpp_path=None,
+                                       gppraw_path=None,
+                                       LRU=None),
+            'SiB_mech': stemrun('SiB_mech',
+                                aqout_path=p.aqout_SiB_mech,
+                                fcos_path=p.fcos_SiB_mech,
+                                gpp_path=None,
+                                gppraw_path=None,
+                                LRU=None),
+            'SiB_calc': stemrun('SiB_calc',
+                                aqout_path=p.aqout_SiB_calc,
+                                fcos_path=p.fcos_SiB_calc,
+                                gpp_path=None,
+                                gppraw_path=None,
+                                LRU=None),
+            'Anthro_Andrew': stemrun('Anthro_Andrew',
+                                     aqout_path=p.aqout_Anthro_Andrew,
+                                     fcos_path=p.fcos_Anthro_Andrew,
+                                     gpp_path=None,
+                                     gppraw_path=None,
+                                     LRU=None),
+            'Anthro_Kettle': stemrun('Anthro_Kettle',
+                                     aqout_path=p.aqout_Anthro_Kettle,
+                                     fcos_path=None,
+                                     gpp_path=None,
+                                     gppraw_path=None,
+                                     LRU=None),
+            'climatological_bnd': stemrun('Climatological_bounds',
+                                          aqout_path=p.aqout_clim_bnds,
+                                          fcos_path=None,
+                                          gpp_path=None,
+                                          gppraw_path=None,
+                                          LRU=None)})
 
 
 def get_C3C4runs():
@@ -381,7 +472,7 @@ def get_C3C4runs():
     get_runs().  Returns a dict with the same structure as the result
     of get_runs containing only these runs.
     """
-    c4runs = {k: v for k, v in get_runs().items() if k.find('C4') > 0}
+    c4runs = {k: v for k, v in get_runs().items() if k.find('C4') >= 0}
     return(c4runs)
 
 
@@ -403,5 +494,30 @@ def get_Fsoil_runs():
     get_runs().  Returns a dict with the same structure as the result
     of get_runs containing only these runs.
     """
-    fsoil_runs = {k: v for k, v in get_runs().items() if k.find('Fsoil') > 0}
+    fsoil_runs = {k: v for k, v in get_runs().items() if k.find('Fsoil') >= 0}
     return(fsoil_runs)
+
+
+def get_Boundaries_runs():
+    """
+    pulls the GEOS-Chem boundary conditions runs from the result of
+    get_runs().  Returns a dict with the same structure as the result
+    of get_runs containing only these runs.
+    """
+    bounds_runs = {k: v for k, v in get_runs().items() if k.find('bounds') >= 0}
+    return(bounds_runs)
+
+
+def get_Spatial_Paper_runs(spatial_runs=None, const_cos=4.5e-10):
+    """remove a handful of runs that I'm not using in the spatial
+    paper from the get_runs() dict, and calculate GEOS-Chem boundaries
+    results from the plant flux runs.
+    """
+    if spatial_runs is None:
+        spatial_runs = get_runs()
+    keys_to_remove = ['casa_gfed_pctm_bnd', 'casa_gfed_KV']
+    for k in keys_to_remove:
+        if k in spatial_runs:
+            del spatial_runs[k]
+
+    return(spatial_runs)
