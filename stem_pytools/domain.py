@@ -1,15 +1,22 @@
+"""a set of tools useful for parsing and returning descriptions of the
+STEM domain (grid cell longitude and latitude coordinates, grid cell
+vertical coordinates), and also for some domain-oriented calculations
+(is a point inside or outside of the domain, etc.)
+"""
+
 import os
 import os.path
 import matplotlib
 import numpy as np
 import warnings
-
+import netCDF4
 import stem_pytools.STEM_parsers as sp
 from mpl_toolkits import basemap
 
 
 class STEM_Domain(object):
-
+    """class to contain STEM domain attributes.
+    """
     def __init__(self, fname_topo=None):
         """class constructor for STEM_Domain.  Populates fields: fname_topo,
         bnd_lon, bnd_lat.
@@ -46,15 +53,15 @@ class STEM_Domain(object):
         return(basemap.Basemap(projection='aeqd', lat_0=90, lon_0=0))
 
     def get_lat(self):
-        """return the STEM latitude grid from self.topo_fname"""
+        """return the STEM latitude grid from self.fname_topo"""
         return(self.STEM_lat)
 
     def get_lon(self):
-        """return the STEM longitude grid from self.topo_fname"""
+        """return the STEM longitude grid from self.fname_topo"""
         return(self.STEM_lon)
 
     def get_topo(self):
-        """return the STEM topo grid from self.topo_fname"""
+        """return the STEM topo grid from self.fname_topo"""
         return(self.topo)
 
     def in_domain(self, lon, lat):
@@ -76,6 +83,44 @@ class STEM_Domain(object):
                 is_in[i, j] = p.contains_point(m(lon[i, j],
                                                  lat[i, j]))
         return(is_in)
+
+    def get_STEMZ_height(self,
+                         wrfheight_fname='./wrfheight-124x124-22levs.nc'):
+        """
+        Get STEM Z level boundaries in meters above sea level.
+
+        Read the wrf height and topo files to get the STEM vertical cell
+        boundaries in meters above sea level.  How model levels should be
+        interpreted is described in (1) and (2):
+        (1)
+        http://www.ecmwf.int/research/ifsdocs/DYNAMICS/Chap2_Discretization4.html#961180
+        (2) Simmons, A.J., and D.M. Burridge, 1981: An energy and angular
+            momentum conserving vertical finite difference scheme and hybrid
+            vertical coordinates. Mon. Weather Rev., 109, 758-766.
+        PARAMETERS
+        ----------
+        topo_fname: full path to the IO/API file containing lat, lon, and
+           height above sea level for STEM grid cells
+        wrfheight_fname: full path to the IO/API file containing z levels
+           for stem grid cells
+
+        OUTPUT
+        two-element tuple of numpy ndarrays: (agl, asl).  agl contains the
+        stem cell heights above ground level, asl contains the stem cell
+        heights above sea level.
+        """
+
+        # numpy array shape(22, 124, 124): zlev, lat, lon.  squeeze removes
+        # the time dimension
+        nc = netCDF4.Dataset(wrfheight_fname, 'r', format='NETCDF4')
+        self.agl = nc.variables['AGL'][:].squeeze()
+        nc.close()
+        # parse_STEM_var currently won't handle time-independent I/O
+        # API files
+        # agl_var = sp.parse_STEM_var(wrfheight_fname,
+        #                             varname='AGL')
+        # self.agl = agl_var['data'].squeeze()
+        self.asl = self.agl + self.get_topo()
 
 
 def get_2d_perimeter(arr):

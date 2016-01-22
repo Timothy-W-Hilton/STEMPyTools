@@ -417,42 +417,6 @@ class NOAA_OCS(object):
 #     m.drawcoastlines()
 #     return(m)
 
-def get_STEMZ_height(topo_fname='./TOPO-124x124.nc',
-                     wrfheight_fname='./wrfheight-124x124-22levs.nc'):
-    """
-    Get STEM Z level boundaries in meters above sea level.
-
-    Read the wrf height and topo files to get the STEM vertical cell
-    boundaries in meters above sea level.  How model levels should be
-    interpreted is described in (1) and (2):
-    (1) http://www.ecmwf.int/research/ifsdocs/DYNAMICS/Chap2_Discretization4.html#961180
-    (2) Simmons, A.J., and D.M. Burridge, 1981: An energy and angular
-        momentum conserving vertical finite difference scheme and hybrid
-        vertical coordinates. Mon. Weather Rev., 109, 758-766.
-    PARAMETERS
-    ----------
-    topo_fname: full path to the IO/API file containing lat, lon, and
-       height above sea level for STEM grid cells
-    wrfheight_fname: full path to the IO/API file containing z levels
-       for stem grid cells
-
-    OUTPUT
-    two-element tuple of numpy ndarrays: (agl, asl).  agl contains the
-    stem cell heights above ground level, asl contains the stem cell
-    heights above sea level.
-    """
-
-    lon, lat, topo = STEM_parsers.parse_STEM_coordinates(topo_fname)
-
-    nc = netCDF4.Dataset(wrfheight_fname, 'r', format='NETCDF4')
-    #numpy array shape(22, 124, 124): zlev, lat, lon.  squeeze removes
-    #the time dimension
-    agl = nc.variables['AGL'][:].squeeze()
-    nc.close()
-
-    asl = agl + topo #[np.newaxis, ...].shape
-    return((agl, asl))
-
 def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
     """
     find nearest neighbors for a set of lon, lat points from a second

@@ -1,10 +1,13 @@
 import numpy as np
 import numpy.ma as ma
-import os, os.path
-from noaa_ocs import get_STEMZ_height
+import os
+import os.path
 
-def calc_STEM_COS_drawdown(aqout_conc, 
-                           topo_fname=None, 
+import domain
+
+
+def calc_STEM_COS_drawdown(aqout_conc,
+                           topo_fname=None,
                            wrfheight_fname=None,
                            lo_height_agl=2000,
                            hi_height_agl=4000):
@@ -26,25 +29,27 @@ def calc_STEM_COS_drawdown(aqout_conc,
        the "high" altitdude bin.  Default is 4000 m.
     """
     MCLS_M3_2_PPTV = 1e12
-    
+
     if topo_fname is None:
-        topo_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
+        topo_fname = os.path.join(os.getenv('SARIKA_INPUT'),
                                   'TOPO-124x124.nc')
     if wrfheight_fname is None:
-        wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'), 
+        wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'),
                                        'wrfheight-124x124-22levs.nc')
-    agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
-    
+    d = domain.STEM_Domain(fname_topo=topo_fname)
+    agl, asl = d.get_STEMZ_height(wrfheight_fname)
+
     # tile agl a 3D array. Tile it out to four dimensions so it has
     # the same number of time stamps as aqout_conc.
     agl = np.tile(agl, (aqout_conc.shape[0], 1, 1, 1))
 
-    stem_z = 1  #second axis of AQOUT is z level
+    stem_z = 1  # second axis of AQOUT is z level
 
-    lo_cos = ma.masked_where(agl >= lo_height_agl, aqout_conc).mean(axis=stem_z)
-    hi_cos = ma.masked_where(agl <= hi_height_agl, aqout_conc).mean(axis=stem_z)
+    lo_cos = ma.masked_where(agl >= lo_height_agl,
+                             aqout_conc).mean(axis=stem_z)
+    hi_cos = ma.masked_where(agl <= hi_height_agl,
+                             aqout_conc).mean(axis=stem_z)
 
     dd = (hi_cos - lo_cos) * MCLS_M3_2_PPTV
     dd = dd[:, np.newaxis, ...]
     return(dd)
-
