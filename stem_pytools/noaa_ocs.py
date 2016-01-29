@@ -10,27 +10,19 @@ functionality, and the following functions:
 
 get_STEMZ_height_ASL: calculate STEM Z levels from WRF heights and
 STEM grid topography.
-
-find_nearest_stem_xy: find the STEM grid cell nearest to a specified
-latitude and longitude.
-
-lon_lat_to_cartesian: calculate cartesian X, Y, Z coordinates from
-spherical coordinates.
 """
 
 import os.path
-import netCDF4
 import re
 import numpy as np
 from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.spatial import cKDTree
 from brewer2mpl import qualitative as brewer_qualitative
 import glob
 
+import domain
 import na_map
-import STEM_parsers
 
 
 class NOAA_OCS(object):
@@ -44,7 +36,7 @@ class NOAA_OCS(object):
     """
     def __init__(self,
                  obs=None,
-                 remove_poor_quality = True):
+                 remove_poor_quality=True):
         """
         Class constructor; builds object from an existing Pandas
         DataFrame of observations.
@@ -96,9 +88,9 @@ class NOAA_OCS(object):
         # the NOAA files contain varying number of header lines.  It
         # looks like the column names are always the last commented
         # header line.  Now get the column names and the number of
-       # header lines.
+        # header lines.
         f = open(fname, 'r')
-        ln = "#"  #initialize to empty comment
+        ln = "#"  # initialize to empty comment
         hdr_count = 0
         while(ln[0] is '#'):
             last_ln = ln
@@ -163,9 +155,10 @@ class NOAA_OCS(object):
         stem_lon: longitudes of STEM grid cell centers
         stem_lat: latitudes of STEM grid cell centers
         """
-        self.obs['x_stem'], self.obs['y_stem'] = find_nearest_stem_xy(
-            self.obs.sample_longitude,
-            self.obs.sample_latitude,
+
+        self.obs['x_stem'], self.obs['y_stem'] = domain.find_nearest_stem_xy(
+            self.obs.sample_longitude.values,
+            self.obs.sample_latitude.values,
             stem_lon,
             stem_lat)
         self.obs['lon_stem'] = stem_lon[self.obs.x_stem, self.obs.y_stem]
@@ -188,17 +181,18 @@ class NOAA_OCS(object):
         wrfheight_fname: full path the to the IO/API file specifying
            the WRF heights on the STEM grid.
         """
-        agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
+        d = domain.STEM_Domain(topo_fname)
+        d.get_STEMZ_height(wrfheight_fname)
         n_obs = self.obs.shape[0]
-        self.obs['z_stem'] = np.NaN  #initialize z to NaN
-        #import pdb; pdb.set_trace()
+        self.obs['z_stem'] = np.NaN  # initialize z to NaN
+        # import pdb; pdb.set_trace()
         for i in range(n_obs):
             bin_idx = np.digitize(
                 x=self.obs['sample_altitude'].values[np.newaxis, i],
-                bins=asl[...,
-                         self.obs.x_stem.values[i],
-                         self.obs.y_stem.values[i]])
-            #"+1" because python indices are 0-based, STEM indices are 1-based
+                bins=d.asl[...,
+                           self.obs.x_stem.values[i],
+                           self.obs.y_stem.values[i]])
+            # "+1" because python indices are 0-based, STEM indices are 1-based
             self.obs['z_stem'].values[i] = bin_idx + 1
 
     def get_stem_t(self, stem_t0):
@@ -213,7 +207,7 @@ class NOAA_OCS(object):
         stem_t0: datetime.datetime; the first timestep of the stem
            simulation.
         """
-        #lamda function to convert np.timedelta64 to hours
+        # lamda function to convert np.timedelta64 to hours
         td2hrs = lambda x: x / np.timedelta64(1, 'h')
         self.obs['stemt'] = (self.obs.datet - stem_t0).apply(td2hrs)
 
@@ -304,9 +298,9 @@ class NOAA_OCS(object):
 
     def plot_obs_site_locations(self):
         """
-        plot a map of N America with obsertion sites labeled. The mean longitude
-        and latitude for each unique site code in the data set is
-        plotted to a map of North America.
+        plot a map of N America with obsertion sites labeled. The mean
+        longitude and latitude for each unique site code in the data
+        set is plotted to a map of North America.
 
         OUTPUTS:
         matplotlib.pyplot.figure containing the map
@@ -314,7 +308,7 @@ class NOAA_OCS(object):
 
         data_agg = self.get_sites_lats_lons()
 
-        fig = plt.figure(figsize=(12,12))
+        fig = plt.figure(figsize=(12, 12))
         ax = plt.axes()
         location_map = na_map.NAMapFigure(t_str='NOAA airborne obs locations',
                                           map_axis=ax)
@@ -327,16 +321,15 @@ class NOAA_OCS(object):
                      color=col, size=24.0,
                      horizontalalignment='left',
                      verticalalignment='bottom')
-            plt.scatter(x,y,marker='x', color=col)
-            plt.scatter(x,y, marker='o',
+            plt.scatter(x, y, marker='x', color=col)
+            plt.scatter(x, y, marker='o',
                         edgecolors=col,
                         facecolors='none')
         return(location_map)
 
-
     def calculate_OCS_daily_vert_drawdown(self,
-                                          altitude_bins= [0, 2000,
-                                                          3400, np.inf],
+                                          altitude_bins=[0, 2000,
+                                                         3400, np.inf],
                                           topo_fname=None,
                                           wrfheight_fname=None):
         """
@@ -361,11 +354,12 @@ class NOAA_OCS(object):
         if wrfheight_fname is None:
             wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'),
                                            'wrfheight-124x124-22levs.nc')
-        agl, asl = get_STEMZ_height(topo_fname, wrfheight_fname)
+        d = domain.STEM_Domain(fname_topo=topo_fname)
+        d.get_STEMZ_height(wrfheight_fname)
 
-        #calulate noaa observation heights above ground level (m)
+        # calulate noaa observation heights above ground level (m)
         # ground level altiude above sea level
-        self.obs['alt_gl'] = asl[0, self.obs.x_stem, self.obs.y_stem]
+        self.obs['alt_gl'] = d.asl[0, self.obs.x_stem, self.obs.y_stem]
         # sample altitude above ground level
         self.obs['sample_altitude_agl'] = (self.obs.sample_altitude -
                                            self.obs.alt_gl)
@@ -374,7 +368,9 @@ class NOAA_OCS(object):
 
         self.obs['date'] = [t.to_datetime().date() for t in self.obs.datet]
         agg_vars = ['date', 'sample_site_code', 'alt_bin', 'analysis_value']
-        grps = self.obs[agg_vars].groupby(['alt_bin', 'date', 'sample_site_code'])
+        grps = self.obs[agg_vars].groupby(['alt_bin',
+                                           'date',
+                                           'sample_site_code'])
 
         # take the mean within each date-site-altitude combination
         ocs_mean = grps.aggregate(np.nanmean)
@@ -394,7 +390,8 @@ class NOAA_OCS(object):
                        left_index=True,
                        right_index=True,
                        suffixes=('_lo', '_hi'))
-        #create a new data frame indexed by site & date containing OCS drawdown
+        # create a new data frame indexed by site & date containing
+        # OCS drawdown
         dd_df = pd.DataFrame(mgd.analysis_value_hi - mgd.analysis_value_lo,
                              columns=['ocs_dd'])
 
@@ -417,75 +414,6 @@ class NOAA_OCS(object):
 #     m.drawcoastlines()
 #     return(m)
 
-def find_nearest_stem_xy(lon, lat, lon_stem, lat_stem):
-    """
-    find nearest neighbors for a set of lon, lat points from a second
-    set of lon, lat points.
-
-    Given a set of arbitrary (lon, lat) positions, find the horizontal
-    (x, y) STEM grid indices of the nearest STEM grid cell center to
-    each position.
-    PARAMETERS
-    ----------
-    lon, lat: ndarray; of arbitrary longitudes and latitudes.  Must
-       contain the same number of elements.
-    lon_stem, lat_stem: ndarrays; longitudes and latitudes of STEM
-       grid cell centers. Must contain the same number of elements.
-
-    RETURNS:
-    a 2-element tuple of X and Y indices, one index per observation.
-    """
-    # convert spherical lon, lat coordinates to cartesian coords. Note
-    # that these x,y,z are 3-dimensional cartesian coordinates of
-    # positions on a sphere, and are thus different from the x,y,z
-    # *indices* of the STEM grid.
-    x, y, z = lon_lat_to_cartesian(lon, lat)
-    xs, ys, zs = lon_lat_to_cartesian(lon_stem, lat_stem)
-
-    #use a K-dimensional tree to find the nearest neighbor to (x,y,z)
-    #from the points within (xs, ys, zs).  A KD tree is a data
-    #structure that allows efficient queries of K-dimensional space (K
-    #here is 3).
-    tree = cKDTree(np.dstack((xs.flatten(),
-                              ys.flatten(),
-                              zs.flatten())).squeeze())
-    d, inds = tree.query(
-        np.dstack((x.values,
-                   y.values,
-                   z.values)).squeeze(), k = 1)
-
-    return(np.unravel_index(inds, lon_stem.shape))
-
-def lon_lat_to_cartesian(lon, lat, R = 1):
-    """
-    Convert spherical coordinates to three-dimensional Cartesian
-    coordinates.
-
-    calculates three dimensional cartesian coordinates (x, y, z) for
-    specified longitude, latitude coordinates on a sphere with radius
-    R.  Written and posted at earthpy.org by Oleksandr Huziy.
-    http://earthpy.org/interpolation_between_grids_with_ckdtree.html
-    accessed 19 Mar 2014 by Timothy W. Hilton.
-
-    PARAMETERS
-    ==========
-    lon; np.ndarray: longitude values
-    lat; np.ndarray: latitude values
-    R: scalar; radius of the sphere.
-
-    RETURNS
-    =======
-    three element tuple containing X, Y, and Z, one element per
-    lon,lat pair.
-    """
-    lon_r = np.radians(lon)
-    lat_r = np.radians(lat)
-
-    x =  R * np.cos(lat_r) * np.cos(lon_r)
-    y = R * np.cos(lat_r) * np.sin(lon_r)
-    z = R * np.sin(lat_r)
-    return x,y,z
-
 
 def get_all_NOAA_airborne_data(noaa_dir):
     """
@@ -494,11 +422,11 @@ def get_all_NOAA_airborne_data(noaa_dir):
     searching for files named *ocs*.txt within the specified
     directory.
 
-    INPUTS:
+    ARGS:
     noaa_dir: full path to a directory containing NOAA OCS observation
         files
 
-    OUTPUTS:
+    RETURNS:
     noaa_ocs.NOAA_OCS object containing all the parsed observations
 
     author: Timothy W. Hilton, UC Merced <thilton@ucmerced.edu>
@@ -510,3 +438,25 @@ def get_all_NOAA_airborne_data(noaa_dir):
                                    this_data in data_list]))
 
     return(data)
+
+
+def get_sites_summary(noaa_dir):
+    """create a pandas data frame with site code, lon and lat for all
+    sites with data files in the specified directory
+
+    ARGS:
+    noaa_dir (string): full path to a directory containing NOAA OCS observation
+        files
+
+    RETURNS:
+    pandas DataFrame object with columns site_code, lon, lat
+    """
+
+    all_sites_df = get_all_NOAA_airborne_data(noaa_dir)
+    summary_df = all_sites_df.obs.groupby('sample_site_code').mean()
+    summary_df = summary_df[['sample_longitude', 'sample_latitude']]
+    summary_df = summary_df.reset_index()
+    summary_df.rename(columns={k: k.replace('sample_', '')
+                               for k in summary_df.columns.values},
+                      inplace=True)
+    return(summary_df)
