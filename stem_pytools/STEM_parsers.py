@@ -335,6 +335,9 @@ def parse_STEM_tflag(nc_fname, out_format='datetime', varname=None):
     YYYYDDD,HHMMSS.  The specified file must contain the variable
     TFLAG.
 
+    if the I/O API file is time-independent (TSTEP == 0), returns
+    np.NaN
+
     ARGS:
     nc_fname (string): the full path to the IO/API file.
     out_format ({'datetime'}|'hour'): format to return time.  If
@@ -348,6 +351,7 @@ def parse_STEM_tflag(nc_fname, out_format='datetime', varname=None):
     RETURNS:
     numpy array of datetime.datetime or integers (depending on
         out_format parameter)
+
     """
     SECONDS_PER_HOUR = 60*60
     try:
@@ -355,6 +359,12 @@ def parse_STEM_tflag(nc_fname, out_format='datetime', varname=None):
     except:
         print('error opening {}'.format(nc_fname))
         raise
+
+    if (nc.TSTEP == 0):
+        # "time-independent" I/O API file
+        result = np.empty((1))
+        result[0] = np.NaN
+        return(result)
 
     if varname is None:
         var_idx = 1
@@ -441,7 +451,9 @@ def parse_STEM_var(nc_fname=None,
         print('error opening {}'.format(nc_fname))
         raise
     t_dt = parse_STEM_tflag(nc_fname, varname=varname)
-    if t_idx is None:
+    if np.isnan(t_dt).any():
+        t_idx = 0
+    elif t_idx is None:
         # find the requested timestamps
         if t0 is None:
             t0 = t_dt.min()
