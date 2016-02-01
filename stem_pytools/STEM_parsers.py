@@ -451,7 +451,7 @@ def parse_STEM_var(nc_fname=None,
         print('error opening {}'.format(nc_fname))
         raise
     t_dt = parse_STEM_tflag(nc_fname, varname=varname)
-    if np.isnan(t_dt).any():
+    if pd.isnull(t_dt).any():
         t_idx = 0
     elif t_idx is None:
         # find the requested timestamps

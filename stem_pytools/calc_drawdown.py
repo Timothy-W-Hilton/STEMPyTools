@@ -37,11 +37,11 @@ def calc_STEM_COS_drawdown(aqout_conc,
         wrfheight_fname = os.path.join(os.getenv('SARIKA_INPUT'),
                                        'wrfheight-124x124-22levs.nc')
     d = domain.STEM_Domain(fname_topo=topo_fname)
-    agl, asl = d.get_STEMZ_height(wrfheight_fname)
+    d.get_STEMZ_height(wrfheight_fname)
 
     # tile agl a 3D array. Tile it out to four dimensions so it has
     # the same number of time stamps as aqout_conc.
-    agl = np.tile(agl, (aqout_conc.shape[0], 1, 1, 1))
+    agl = np.tile(d.agl, (aqout_conc.shape[0], 1, 1, 1))
 
     stem_z = 1  # second axis of AQOUT is z level
 
