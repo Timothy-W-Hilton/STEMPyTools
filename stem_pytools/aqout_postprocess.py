@@ -1,3 +1,9 @@
+"""Provides functionality useful for postporcessing STEM AQOUT files
+
+class aqout_container() provides most of the functionality.  Several
+helper functions are also included.
+"""
+
 import sys
 import numpy as np
 import os.path
