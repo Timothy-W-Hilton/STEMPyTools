@@ -153,8 +153,10 @@ class aqout_container(object):
 
         # TO DO: check here that mean, std dev have in fact been calculated
 
+        NC_FLOAT = 'f'  # netCDF4 specifier for NC_FLOAT datatype
         NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
         NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
+        NC_INT = 'i4'  # netCDF4 specifier for NC_DOUBLE datatype
 
         if os.path.exists(fname):
             warnings.warn(("{} already exists. Please delete "
@@ -169,13 +171,13 @@ class aqout_container(object):
         nc.createDimension('COL', self.cos_mean.shape[3])
 
         nc.createVariable(varname='cos_mean',
-                          datatype=NC_DOUBLE,
+                          datatype=NC_FLOAT,
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
         nc.createVariable(varname='cos_std',
-                          datatype=NC_DOUBLE,
+                          datatype=NC_FLOAT,
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
         nc.createVariable(varname='time',
-                          datatype=NC_INT64,
+                          datatype=NC_INT,
                           dimensions=(('T')))
 
         # describe units, etc.
