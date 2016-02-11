@@ -8,6 +8,7 @@ import warnings
 import cPickle
 from datetime import datetime, timedelta
 import itertools
+import subprocess
 
 from stem_pytools import STEM_parsers as sp
 from stem_pytools.check_paths import check_path_with_msg
@@ -149,6 +150,11 @@ class aqout_container(object):
         NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
         NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
 
+        if os.path.exists(fname):
+            warnings.warn(("{} already exists. Please delete "
+                           "or rename before proceeding. "
+                           "Exiting; file not written".format(fname)))
+            return
         nc = netCDF4.Dataset(fname, 'w')
 
         nc.createDimension('T', self.cos_mean.shape[0])
@@ -357,3 +363,32 @@ def load_aqout_data(fname='/home/thilton/Data/STEM/aq_out_data.cpickle'):
     all_data = cPickle.load(f)
     f.close()
     return(all_data)
+
+
+def combine_aqout_netcdf_files(fnames, fname_out="out.nc"):
+    """combine multiple aqout_container netcdf files to a single
+    netcdf file.
+
+    Combines multiple aqout_container netcdf files produced by
+    aqout_container.stats_to_netcdf() into a single netcdf file.  The
+    datasets from each separate netcdf file are placed into netcdf
+    groups.
+
+    Depends on ncecat from the `NCO operators <http://nco.sourceforge.net/>`_
+
+    ARGS
+    fnames (list): list of strings containing full paths of netcdf
+        files to be combined.
+    fname_out (string): full path to the combined netcdf file to
+        create.  Default is "./out.nc"
+
+    RETURNS:
+    0 on success
+    """
+
+    for f in fnames:
+        if not os.path.exists(f):
+            raise IOError("{} not found.".format(f))
+
+    cmd = "ncecat --gag {} {}".format(" ".join(fnames), fname_out)
+    subprocess.call(cmd, shell=True)
