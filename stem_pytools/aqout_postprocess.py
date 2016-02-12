@@ -154,8 +154,6 @@ class aqout_container(object):
         # TO DO: check here that mean, std dev have in fact been calculated
 
         NC_FLOAT = 'f'  # netCDF4 specifier for NC_FLOAT datatype
-        NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
-        NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
         NC_INT = 'i4'  # netCDF4 specifier for NC_DOUBLE datatype
 
         if os.path.exists(fname):
@@ -198,14 +196,6 @@ class aqout_container(object):
                            'defined as between 15:00 and 23:00 UTC, '
                            'which is 10:00 EST to 15:00 PST.'))
 
-        # ----------
-        # I think this is superseded by the below, but I've gotten
-        # confused by my git branches and commits and I'm not sure.
-        # So I'm holding onto both for the time being
-        # nc.variables['cos_mean'][:] = self.cos_mean
-        # nc.variables['cos_std'][:] = self.cos_std
-        # nc.variables['t'][:] = map(datetime.toordinal, self.t_stats)
-        # ----------
         nc.variables['cos_mean'][...] = self.cos_mean
         nc.variables['cos_std'][...] = self.cos_std
         nc.variables['time'][...] = map(
