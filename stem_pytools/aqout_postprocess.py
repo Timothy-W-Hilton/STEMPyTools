@@ -19,6 +19,7 @@ import subprocess
 from stem_pytools import STEM_parsers as sp
 from stem_pytools.check_paths import check_path_with_msg
 from stem_pytools import NERSC_data_paths as ndp
+from stem_pytools import calc_drawdown
 
 
 class aqout_container(object):
@@ -140,6 +141,18 @@ class aqout_container(object):
                                                         is_midday,
                                                         np.std)
 
+    def calc_drawdown(self,
+                      topo_fname=None, wrfheight_fname=None,
+                      lo_height_agl=2000, hi_height_agl=4000):
+        """calculate mean COS drawdown from cos_total.  Arguments are
+        passed directly to calc_drawdown.calc_JA_midday_drawdown.
+        """
+
+        dd = calc_drawdown.calc_STEM_COS_drawdown(self.cos_total,
+                                                  topo_fname=None,
+                                                  wrfheight_fname=None)
+        return dd
+
     def stats_to_netcdf(self, fname):
 
         """Write daily COS mean and standard deviation to a netCDF file.
@@ -202,6 +215,7 @@ class aqout_container(object):
             lambda x: np.int(x.strftime('%Y%m%d%H%M%S')), self.t_stats)
 
         nc.close()
+
 
     def align_tstamps(self):
         """This approach will work to combine aqout files at timestamps
