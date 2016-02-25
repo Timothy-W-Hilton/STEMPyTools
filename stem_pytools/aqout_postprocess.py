@@ -32,7 +32,8 @@ class aqout_container(object):
        in the object's data
     key: character string; short string for use a key in a dict of
        aqout scenarios
-
+    aq_keys: list of strings; have have same length as aqout_paths.
+       Contains a short key for each individual aqout_file.
     The class also provides a str method to produce a nicely formatted
     printout of the paths it contains.
 
@@ -40,8 +41,11 @@ class aqout_container(object):
     def __init__(self,
                  aqout_paths=[],
                  desc='',
-                 key=''):
+                 key='',
+                 aq_keys=[]):
         """class constructor"""
+        if len(key) is 0:
+            key = '-'.join(aq_keys)
         # if the aqout_paths argument contains a single string,
         # convert to a one-element tuple.  Doing that here rather than
         # requiring that the aqout_paths be a tuple already allows for
@@ -51,6 +55,7 @@ class aqout_container(object):
             aqout_paths = (aqout_paths,)
         self.desc = desc
         self.key = key
+        self.aq_keys = aq_keys
         self.aqout_paths = aqout_paths
         self.data = []  # list to hold data arrays
         self.t = []  # list to hold time stamp arrays
