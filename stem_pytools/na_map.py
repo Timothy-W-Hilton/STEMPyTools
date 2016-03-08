@@ -113,7 +113,7 @@ class NAMapFigure(object):
 
         if fast_or_pretty is 'pretty':
             mapwidth = mapwidth  # not sure of units for width/height
-            mapheight = mapwidth
+            mapheight = mapheight
             self.map = Basemap(width=mapwidth,
                                height=mapheight,
                                projection='aeqd',
