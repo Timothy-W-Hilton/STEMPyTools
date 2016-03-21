@@ -168,11 +168,11 @@ class NAMapFigure(object):
         self.map.drawmeridians(meridians=range(0, -180, -15),
                                labels=meridian_labels,
                                color=self.map_grid_col,
-                               fontsize=10)
+                               fontsize=14)
         self.map.drawparallels(circles=range(0, 90, 20),
                                labels=parallel_labels,
                                color=self.map_grid_col,
-                               fontsize=10)
+                               fontsize=14)
 
     def add_ocs_contour_plot(self,
                              lons,
