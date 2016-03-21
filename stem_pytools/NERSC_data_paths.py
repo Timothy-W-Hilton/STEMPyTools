@@ -38,7 +38,8 @@ class paths(object):
         self.d_SiB = os.path.join(self.d_proj,
                                   'Data',
                                   'Additional_Flux_Models',
-                                  'SiB_from_Ian_2015-03-13')
+                                  'SiB_from_Ian_2015-03-13',
+                                  '2016-03-18_Regridded_SiB')
         self.d_Anthro = os.path.join(self.d_proj,
                                      'Data',
                                      'Anth_COS')
@@ -192,6 +193,9 @@ class paths(object):
         # ===============
         # SiB files
         # ===============
+        self.gpp_SiB = os.path.join(
+            self.d_SiB,
+            'SiB_124x124_GPP_2008JulAug.nc')
         self.fcos_SiB_calc = os.path.join(
             self.d_SiB,
             'SiB_124x124_Fplant_calc_2008JulAug.nc')
@@ -437,13 +441,13 @@ def get_runs():
             'SiB_mech': stemrun('SiB_mech',
                                 aqout_path=p.aqout_SiB_mech,
                                 fcos_path=p.fcos_SiB_mech,
-                                gpp_path=None,
+                                gpp_path=p.gpp_SiB,
                                 gppraw_path=None,
                                 LRU=None),
             'SiB_calc': stemrun('SiB_calc',
                                 aqout_path=p.aqout_SiB_calc,
                                 fcos_path=p.fcos_SiB_calc,
-                                gpp_path=None,
+                                gpp_path=p.gpp_SiB,
                                 gppraw_path=None,
                                 LRU=None),
             'Anthro_Andrew': stemrun('Anthro_Andrew',
