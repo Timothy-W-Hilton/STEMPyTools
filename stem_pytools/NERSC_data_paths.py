@@ -519,9 +519,19 @@ def get_Spatial_Paper_runs(spatial_runs=None, const_cos=4.5e-10):
     """
     if spatial_runs is None:
         spatial_runs = get_runs()
-    keys_to_remove = ['casa_gfed_pctm_bnd', 'casa_gfed_KV']
+    keys_to_remove = ['casa_gfed_pctm_bnd', 'casa_gfed_KV',
+                      'GEOSChem_bounds', 'kettle_161', 'MPI_161',
+                      'casa_gfed_187', 'casa_m15_161',
+                      'casa_m15_C4pctLRU', 'MPI_C4pctLRU',
+                      'kettle_C4pctLRU', 'casa_gfed_135']
     for k in keys_to_remove:
         if k in spatial_runs:
             del spatial_runs[k]
+
+    dir = os.path.join(os.getenv('PROJ'), 'Data', 'STEM_124x124_NA_inputs')
+    spatial_runs['climatological_bnd'].top_bounds_path = os.path.join(
+        dir, 'upbound_124x124-climatological_124x124.nc')
+    spatial_runs['climatological_bnd'].lateral_bounds_path = os.path.join(
+        dir, 'climatological_COS_bdy_22levs_124x124.nc')
 
     return(spatial_runs)
