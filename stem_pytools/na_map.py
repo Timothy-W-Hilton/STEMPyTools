@@ -3,10 +3,12 @@ America suitable for plotting STEM 124x124 grid output"""
 
 from datetime import datetime
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib as mpl
 from mpl_toolkits.basemap import Basemap
+import inspect
 
 R_EARTH = 6371007.181000  # Earth radius in meters
 
@@ -100,12 +102,19 @@ class NAMapFigure(object):
             self.ax_miss = missing_axis
             self.fig = self.ax_map.figure
 
-        if ((cb_axis is not None) and (type(self.ax_cmap) is not
-                                       mpl.axes.Axes)):
+        # if a colorbar was requested (cb_axis isn't None) and no axis
+        # was provided, create one
+        if ((cb_axis is not None) and (matplotlib.axes._axes.Axes
+                                       not in
+                                       inspect.getmro(type(self.ax_cmap)))):
             self.ax_cmap = self.fig.add_axes([0.85, 0.15, 0.05, 0.70],
                                              frame_on=True)
-        if ((missing_axis is not None) and (type(self.ax_miss) is not
-                                            mpl.axes.Axes)):
+        # if a missing data legend was requested (missing_axis isn't
+        # None) and no axis was provided, create one
+        if ((missing_axis is not None) and
+            (matplotlib.axes._axes.Axes
+             not in
+             inspect.getmro(type(self.ax_cmap)))):
             self.ax_miss = self.fig.add_axes([0.81, 0.1, 0.05, 0.05],
                                              frame_on=False)
         if t_str is not None:
