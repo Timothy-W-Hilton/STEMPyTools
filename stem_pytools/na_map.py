@@ -32,6 +32,8 @@ class NAMapFigure(object):
                  mapwidth=9.0e6,
                  mapheight=7.2e6,
                  label_latlon=False,
+                 lon_label_interval=15,
+                 lat_label_interval=20,
                  fast_or_pretty='pretty'):
         """
         class constructor for NAMapFigure.
@@ -63,7 +65,9 @@ class NAMapFigure(object):
            are labeled in the map margins.  This causes the map area
            to shrink slightly to make room for the labels, so it
            should be set to false if the map is to be part of a
-           multi-map grid.
+           multi-map grid.  label_latlon may also be a length-two
+           tuple of booleans; the first value is for latitude labels,
+           the second for longitude labels.
         fast_or_pretty: {'pretty'}|'fast': for 'fast', uses a
            cylindrical projection (passes 'cyl' to the projection
            parameter of basemap.Basemap).  For 'pretty', uses an
@@ -168,20 +172,34 @@ class NAMapFigure(object):
         self.map.fillcontinents(color=self.col_land,
                                 lake_color=self.col_water,
                                 zorder=0)
-        if label_latlon:
+
+        meridian_labels = (0, 0, 0, 0)  # no labels
+        parallel_labels = (0, 0, 0, 0)  # no longitude labels
+        if label_latlon is True:
             meridian_labels = (0, 0, 0, 1)  # labels on bottom
             parallel_labels = (1, 0, 0, 0)  # labels on left
-        else:
+        elif label_latlon is False:
             meridian_labels = (0, 0, 0, 0)  # no labels
             parallel_labels = (0, 0, 0, 0)  # no labels
-        self.map.drawmeridians(meridians=range(0, -180, -15),
+        elif type(label_latlon) is tuple:
+            try:
+                assert len(label_latlon) == 2
+            except AssertionError:
+                print ("label_latlon must be a length-two"
+                       " tuple of boolean values")
+            if label_latlon[0]:
+                parallel_labels = (1, 0, 0, 0)  # labels on left
+            if label_latlon[1]:
+                meridian_labels = (0, 0, 0, 1)  # labels on bottom
+
+        self.map.drawmeridians(meridians=range(0, -180, -lon_label_interval),
                                labels=meridian_labels,
                                color=self.map_grid_col,
-                               fontsize=14)
-        self.map.drawparallels(circles=range(0, 90, 20),
+                               fontsize=12)
+        self.map.drawparallels(circles=range(0, 90, lat_label_interval),
                                labels=parallel_labels,
                                color=self.map_grid_col,
-                               fontsize=14)
+                               fontsize=12)
 
     def add_ocs_contour_plot(self,
                              lons,
