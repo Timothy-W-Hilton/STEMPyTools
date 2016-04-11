@@ -52,4 +52,8 @@ def calc_STEM_COS_drawdown(aqout_conc,
 
     dd = (hi_cos - lo_cos) * MCLS_M3_2_PPTV
     dd = dd[:, np.newaxis, ...]
+
+    abl_mean = lo_cos * MCLS_M3_2_PPTV
+    free_trop_cos = hi_cos * MCLS_M3_2_PPTV
+
     return(dd)

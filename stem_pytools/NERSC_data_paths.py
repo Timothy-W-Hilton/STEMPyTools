@@ -257,11 +257,13 @@ class paths(object):
             'AQOUT-124x124-22levs-coal-cos_2008_2009_0.5_backup.nc')
         self.fcos_Anthro_Andrew = os.path.join(
             self.d_Anthro,
-            'gurney_coal_124x124.nc')
+            'gurney_coal_124x124_m2_s.nc')
         self.aqout_Anthro_Kettle = os.path.join(
             self.d_Anthro,
             'AQOUT_124x124-22leves-kettle-coal_cos_2008_2009.nc')
-
+        self.fcos_Anthro_Kettle = os.path.join(
+            self.d_Anthro,
+            'kettle_coal_124x124_m2_s.nc')
 
 class stemrun(object):
     """
@@ -458,7 +460,7 @@ def get_runs():
                                      LRU=None),
             'Anthro_Kettle': stemrun('Anthro_Kettle',
                                      aqout_path=p.aqout_Anthro_Kettle,
-                                     fcos_path=None,
+                                     fcos_path=p.fcos_Anthro_Kettle,
                                      gpp_path=None,
                                      gppraw_path=None,
                                      LRU=None),
