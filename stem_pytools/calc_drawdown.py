@@ -39,6 +39,13 @@ def calc_STEM_COS_drawdown(aqout_conc,
     d = domain.STEM_Domain(fname_topo=topo_fname)
     d.get_STEMZ_height(wrfheight_fname)
 
+    # use the mean AGL.  the full array has as many time steps as the
+    # WRF pressure field.  Attempting to tile it to match the aqout
+    # time dimension can cause memory errors if there are many WRF P
+    # time steps.  The "right" (tm) way to solve this is probaby to
+    # match time steps between AGL and aqout_conc, but this gets me
+    # going quickly using the mean AGL.
+    d.agl = d.agl.mean(axis=0)[np.newaxis, ...]
     # tile agl a 3D array. Tile it out to four dimensions so it has
     # the same number of time stamps as aqout_conc.
     agl = np.tile(d.agl, (aqout_conc.shape[0], 1, 1, 1))
