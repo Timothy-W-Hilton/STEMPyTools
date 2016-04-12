@@ -440,7 +440,7 @@ def get_all_NOAA_airborne_data(noaa_dir):
     return(data)
 
 
-def get_sites_summary(noaa_dir):
+def get_sites_summary(noaa_dir, stemxy=False):
     """create a pandas data frame with site code, lon and lat for all
     sites with data files in the specified directory
 
@@ -451,10 +451,19 @@ def get_sites_summary(noaa_dir):
     RETURNS:
     pandas DataFrame object with columns site_code, lon, lat
     """
-
     all_sites_df = get_all_NOAA_airborne_data(noaa_dir)
+    if stemxy:
+        dom = domain.STEM_Domain()
+        all_sites_df.get_stem_xy(dom.get_lon(), dom.get_lat())
     summary_df = all_sites_df.obs.groupby('sample_site_code').mean()
-    summary_df = summary_df[['sample_longitude', 'sample_latitude']]
+    if stemxy:
+        summary_df = summary_df[['sample_longitude', 'sample_latitude',
+                                 'x_stem', 'y_stem']]
+        # make sure x, y indices are integers
+        summary_df['x_stem'] = np.int8(np.round(summary_df['x_stem']))
+        summary_df['y_stem'] = np.int8(np.round(summary_df['y_stem']))
+    else:
+        summary_df = summary_df[['sample_longitude', 'sample_latitude']]
     summary_df = summary_df.reset_index()
     summary_df.rename(columns={k: k.replace('sample_', '')
                                for k in summary_df.columns.values},
