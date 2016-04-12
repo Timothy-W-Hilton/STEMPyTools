@@ -1,3 +1,9 @@
+"""Provides functionality useful for postporcessing STEM AQOUT files
+
+class aqout_container() provides most of the functionality.  Several
+helper functions are also included.
+"""
+
 import sys
 import numpy as np
 import os.path
@@ -8,10 +14,12 @@ import warnings
 import cPickle
 from datetime import datetime, timedelta
 import itertools
+import subprocess
 
 from stem_pytools import STEM_parsers as sp
 from stem_pytools.check_paths import check_path_with_msg
 from stem_pytools import NERSC_data_paths as ndp
+from stem_pytools import calc_drawdown
 
 
 class aqout_container(object):
@@ -24,7 +32,8 @@ class aqout_container(object):
        in the object's data
     key: character string; short string for use a key in a dict of
        aqout scenarios
-
+    aq_keys: list of strings; have have same length as aqout_paths.
+       Contains a short key for each individual aqout_file.
     The class also provides a str method to produce a nicely formatted
     printout of the paths it contains.
 
@@ -32,8 +41,11 @@ class aqout_container(object):
     def __init__(self,
                  aqout_paths=[],
                  desc='',
-                 key=''):
+                 key='',
+                 aq_keys=[]):
         """class constructor"""
+        if len(key) is 0:
+            key = '-'.join(aq_keys)
         # if the aqout_paths argument contains a single string,
         # convert to a one-element tuple.  Doing that here rather than
         # requiring that the aqout_paths be a tuple already allows for
@@ -43,6 +55,7 @@ class aqout_container(object):
             aqout_paths = (aqout_paths,)
         self.desc = desc
         self.key = key
+        self.aq_keys = aq_keys
         self.aqout_paths = aqout_paths
         self.data = []  # list to hold data arrays
         self.t = []  # list to hold time stamp arrays
@@ -133,6 +146,18 @@ class aqout_container(object):
                                                         is_midday,
                                                         np.std)
 
+    def calc_drawdown(self,
+                      topo_fname=None, wrfheight_fname=None,
+                      lo_height_agl=2000, hi_height_agl=4000):
+        """calculate mean COS drawdown from cos_total.  Arguments are
+        passed directly to calc_drawdown.calc_JA_midday_drawdown.
+        """
+
+        dd = calc_drawdown.calc_STEM_COS_drawdown(self.cos_total,
+                                                  topo_fname=None,
+                                                  wrfheight_fname=None)
+        return dd
+
     def stats_to_netcdf(self, fname):
 
         """Write daily COS mean and standard deviation to a netCDF file.
@@ -146,9 +171,14 @@ class aqout_container(object):
 
         # TO DO: check here that mean, std dev have in fact been calculated
 
-        NC_DOUBLE = 'd'  # netCDF4 specifier for NC_DOUBLE datatype
-        NC_INT64 = 'i8'  # netCDF4 specifier for NC_DOUBLE datatype
+        NC_FLOAT = 'f'  # netCDF4 specifier for NC_FLOAT datatype
+        NC_INT = 'i4'  # netCDF4 specifier for NC_DOUBLE datatype
 
+        if os.path.exists(fname):
+            warnings.warn(("{} already exists. Please delete "
+                           "or rename before proceeding. "
+                           "Exiting; file not written".format(fname)))
+            return
         nc = netCDF4.Dataset(fname, 'w')
 
         nc.createDimension('T', self.cos_mean.shape[0])
@@ -157,13 +187,13 @@ class aqout_container(object):
         nc.createDimension('COL', self.cos_mean.shape[3])
 
         nc.createVariable(varname='cos_mean',
-                          datatype=NC_DOUBLE,
+                          datatype=NC_FLOAT,
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
         nc.createVariable(varname='cos_std',
-                          datatype=NC_DOUBLE,
+                          datatype=NC_FLOAT,
                           dimensions=(('T', 'LAY', 'ROW', 'COL')))
         nc.createVariable(varname='time',
-                          datatype=NC_INT64,
+                          datatype=NC_INT,
                           dimensions=(('T')))
 
         # describe units, etc.
@@ -184,20 +214,13 @@ class aqout_container(object):
                            'defined as between 15:00 and 23:00 UTC, '
                            'which is 10:00 EST to 15:00 PST.'))
 
-        # ----------
-        # I think this is superseded by the below, but I've gotten
-        # confused by my git branches and commits and I'm not sure.
-        # So I'm holding onto both for the time being
-        # nc.variables['cos_mean'][:] = self.cos_mean
-        # nc.variables['cos_std'][:] = self.cos_std
-        # nc.variables['t'][:] = map(datetime.toordinal, self.t_stats)
-        # ----------
         nc.variables['cos_mean'][...] = self.cos_mean
         nc.variables['cos_std'][...] = self.cos_std
         nc.variables['time'][...] = map(
             lambda x: np.int(x.strftime('%Y%m%d%H%M%S')), self.t_stats)
 
         nc.close()
+
 
     def align_tstamps(self):
         """This approach will work to combine aqout files at timestamps
@@ -357,3 +380,32 @@ def load_aqout_data(fname='/home/thilton/Data/STEM/aq_out_data.cpickle'):
     all_data = cPickle.load(f)
     f.close()
     return(all_data)
+
+
+def combine_aqout_netcdf_files(fnames, fname_out="out.nc"):
+    """combine multiple aqout_container netcdf files to a single
+    netcdf file.
+
+    Combines multiple aqout_container netcdf files produced by
+    aqout_container.stats_to_netcdf() into a single netcdf file.  The
+    datasets from each separate netcdf file are placed into netcdf
+    groups.
+
+    Depends on ncecat from the `NCO operators <http://nco.sourceforge.net/>`_
+
+    ARGS
+    fnames (list): list of strings containing full paths of netcdf
+        files to be combined.
+    fname_out (string): full path to the combined netcdf file to
+        create.  Default is "./out.nc"
+
+    RETURNS:
+    0 on success
+    """
+
+    for f in fnames:
+        if not os.path.exists(f):
+            raise IOError("{} not found.".format(f))
+
+    cmd = "ncecat --gag {} {}".format(" ".join(fnames), fname_out)
+    subprocess.call(cmd, shell=True)

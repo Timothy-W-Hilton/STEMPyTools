@@ -31,7 +31,7 @@ class Mapper124x124(object):
                  n_levs=9,
                  vmin=None,
                  vmax=None,
-                 cmap=None,
+                 cmap=plt.get_cmap('Blues'),
                  norm=None,
                  maskoceans_switch=False,
                  label_latlon=True,
