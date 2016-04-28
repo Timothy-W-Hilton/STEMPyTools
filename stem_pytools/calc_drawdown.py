@@ -45,7 +45,10 @@ def calc_STEM_COS_drawdown(aqout_conc,
     # time steps.  The "right" (tm) way to solve this is probaby to
     # match time steps between AGL and aqout_conc, but this gets me
     # going quickly using the mean AGL.
-    d.agl = d.agl.mean(axis=0)[np.newaxis, ...]
+
+    # need to add axis here if number of dimensions  < 4
+
+    # d.agl = d.agl.mean(axis=0)[np.newaxis, ...]
     # tile agl a 3D array. Tile it out to four dimensions so it has
     # the same number of time stamps as aqout_conc.
     agl = np.tile(d.agl, (aqout_conc.shape[0], 1, 1, 1))
