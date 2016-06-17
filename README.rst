@@ -7,16 +7,15 @@ et al., 2014).
 REFERENCES
 
 Campbell, J. E., G. R. Carmichael, Y. Tang, T. Chai, S. A. Vay,
-Y.-H. Choi, G. W. Sachse, H. B. Singh, J. L. Schnoor, J. Woo,
-J. M. Vukovich, D. G. Streets, L. G. Huey, and C. O. Stanier (2007),
-Analysis of anthropogenic CO2 signal in ICARTT using a regional
-chemical transport model and observed tracers, Tellus B, 59(2), 199
+Y.-H. Choi, G. W. Sachse, H. B. Singh, J. L. Schnoor, J. Woo, J. M. Vukovich,
+D. G. Streets, L. G. Huey, and C. O. Stanier (2007), Analysis of anthropogenic
+ CO2 signal in ICARTT using a regional chemical transport model and observed tracers,
+Tellus B, 59(2), 199–210, doi:10.1111/j.1600-0889.2006.00239.x.
 
-Kulkarni, S., N. Sobhani, J. P. Miller-Schulze, M. M. Shafer,
-J. J. Schauer, P. A. Solomon, P. E. Saide, S. N. Spak, Y. F. Cheng,
-H. A. C. Denier van der Gon, Z. Lu, D. G. Streets,
-G. Janssens-Maenhout, C. Wiedinmyer, J. Lantz, M. Artamonova, B. Chen,
-S. Imashev, L. Sverdlik, J. T. Deminter, B. Adhikary, A. Allura,
-C. Wei, and G. R. Carmichael (2014), Source sector and region
-contributions to BC and PM2.5 in Central Asia, Atmospheric Chemistry
-and Physics Discussions, 14(8), 11343D
+Kulkarni, S., N. Sobhani, J. P. Miller-Schulze, M. M. Shafer, J. J. Schauer,
+P. A. Solomon, P. E. Saide, S. N. Spak, Y. F. Cheng, H. A. C. Denier van der
+Gon, Z. Lu, D. G. Streets, G. Janssens-Maenhout, C. Wiedinmyer, J. Lantz,
+M. Artamonova, B. Chen, S. Imashev, L. Sverdlik, J. T. Deminter, B. Adhikary,
+A. D’Allura, C. Wei, and G. R. Carmichael (2015), Source sector and region
+contributions to BC and PM2.5 in Central Asia, Atmospheric Chemistry and
+Physics, 15(4), 1683–1705, doi:10.5194/acp-15-1683-2015.
