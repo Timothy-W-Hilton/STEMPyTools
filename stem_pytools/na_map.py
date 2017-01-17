@@ -12,6 +12,7 @@ import inspect
 
 R_EARTH = 6371007.181000  # Earth radius in meters
 
+from timpyutils import colormap_nlevs
 
 class NAMapFigure(object):
     """ Class to provide a Matplotlib figure containing a map of North
