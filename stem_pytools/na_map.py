@@ -213,7 +213,8 @@ class NAMapFigure(object):
                              cmap=cm.get_cmap('Blues'),
                              extend='neither',
                              cbar_t_str=None,
-                             colorbar_args={}):
+                             colorbar_args={},
+                             plotfunc=None):
         """Draw filled contours of the specified OCS data over the
         map.
 
