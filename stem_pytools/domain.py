@@ -11,8 +11,8 @@ import numpy as np
 import warnings
 import netCDF4
 import stem_pytools.STEM_parsers as sp
-from mpl_toolkits import basemap
 from scipy.spatial import cKDTree
+
 
 class STEM_Domain(object):
     """class to contain STEM domain attributes.
@@ -42,15 +42,6 @@ class STEM_Domain(object):
         self.bnd_lat = get_2d_perimeter(self.STEM_lat)
 
         return(self)
-
-    def get_mapobj(self):
-        """Return a mpl_toolkits.basemap.Basemap object for a Azimuthal
-        Equidistant projection centered on the North Pole.  This
-        projection accommodates in-domain tests for all latitudes
-        north of 60 degrees South without encountering "wrapping"
-        around the edge of the projection.
-        """
-        return(basemap.Basemap(projection='aeqd', lat_0=90, lon_0=0))
 
     def get_lat(self):
         """return the STEM latitude grid from self.fname_topo"""
